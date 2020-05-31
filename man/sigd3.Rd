@@ -2,6 +2,9 @@
 % Please edit documentation in R/daviz_functions.r
 \name{sigd3}
 \alias{sigd3}
+\alias{sigd3.default}
+\alias{sigd3.mcmc.list}
+\alias{sigd3.mcmc}
 \title{Significance Plot with D3}
 \usage{
 sigd3(
@@ -11,6 +14,7 @@ sigd3(
   height = 500,
   width = 625,
   return_iFrame = TRUE,
+  level = 0.95,
   ylab = paste0("Effect of ", term),
   axfont = 12,
   labfont = 12,
@@ -36,6 +40,8 @@ must be amenable to these manipulations. )}
 \item{return_iFrame}{Logical indicating whether an \code{iframe}
 should be returned to hold the plot.  If \code{FALSE} only the html
 file is produced and the function prpduces no other visible output.}
+
+\item{level}{Confidence level at which to do the test (or in the mcmc case, credibility level for the credible intervals).}
 
 \item{ylab}{Label to put on y-axis.}
 
