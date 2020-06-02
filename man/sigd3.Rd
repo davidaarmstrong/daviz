@@ -21,7 +21,9 @@ sigd3(
   labfam = c("sans-serif", "serif"),
   colors = c("red", "black", "black"),
   ptSize = c(7, 5),
-  lineSize = c(3, 1.5)
+  lineSize = c(3, 1.5),
+  names = NULL,
+  order = c("size-descending", "size-ascending", "natural")
 )
 }
 \arguments{
@@ -59,6 +61,10 @@ file is produced and the function prpduces no other visible output.}
 \item{ptSize}{Vector of two point sizes - the first for selected observations and the second for unselected ones.}
 
 \item{lineSize}{Vector of line widths - the first for selected observations and the second for unselected ones.}
+
+\item{names}{An optional vector of names for the parameters.}
+
+\item{order}{How should parameters be organized by size-ascending, size-descending or natural (i.e., the order in the data).}
 }
 \value{
 Either an html file or an iframe linked to the html file.

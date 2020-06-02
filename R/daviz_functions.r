@@ -27,15 +27,18 @@
 ##' @param colors Vector of three colors the first for the selected items, the second for the un-selected items and the third for when no points are hovered over.
 ##' @param ptSize Vector of two point sizes - the first for selected observations and the second for unselected ones.
 ##' @param lineSize Vector of line widths - the first for selected observations and the second for unselected ones.
+##' @param names An optional vector of names for the parameters.
+##' @param order How should parameters be organized by size-ascending, size-descending or natural (i.e., the order in the data).
 ##'
 ##' @importFrom ggeffects ggpredict
 ##' @importFrom factorplot factorplot
-##' @importFrom dplyr mutate rename select bind_cols
+##' @importFrom dplyr mutate rename select bind_cols arrange
 ##' @importFrom magrittr %>%
 ##' @importFrom jsonlite toJSON
 ##' @importFrom htmltools tags
 ##' @importFrom stats quantile
 ##' @importFrom utils combn
+##' @importFrom rlang .data
 ##'
 ##' @return Either an html file or an iframe linked to the html file.
 ##' @export
@@ -43,8 +46,9 @@
 
 sigd3 <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
                   ylab = paste0("Effect of ", term), axfont = 12, labfont=12,
-                  labfam = c("sans-serif", "serif"), colors=c("red", "black", "black"),
-                  ptSize = c(7,5), lineSize=c(3,1.5)){
+                  labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
+                  ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
+                  order=c("size-descending", "size-ascending", "natural")){
   UseMethod("sigd3")
 }
 
@@ -55,15 +59,25 @@ sigd3 <- function(object, term, fname, height=500, width=625, return_iFrame = TR
 ##' @export
 sigd3.default <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
                   ylab = paste0("Effect of ", term), axfont = 12, labfont=12,
-                  labfam = c("sans-serif", "serif"), colors=c("red", "black", "black"),
-                  ptSize = c(7,5), lineSize=c(3,1.5)){
-labfam = match.arg(labfam)
+                  labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
+                  ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
+                  order=c("size-descending", "size-ascending", "natural")){
+labfam <- match.arg(labfam)
+order <- match.arg(order)
 g <- ggpredict(object, terms=term)
 g <- g %>% mutate(obs=1:nrow(g)) %>%
   rename("y"="predicted",
          "ylow" = "conf.low",
          "yup" = "conf.high") %>%
   select("x","y","ylow","yup","obs")
+if(!is.null(names)){
+  if(length(names) == nrow(g)){
+    g <- mutate(x = names)
+  } else{
+    stop(paste0("names vector (length ", length(names), " has to be the same as the number of parameters (length, ", nrow(g), ").\n"))
+  }
+}
+
 fp <- factorplot(object, factor.var=term, pval=1-level)
 mat <- matrix(0, nrow=nrow(fp$pval)+1, ncol=ncol(fp$pval)+1)
 mat[upper.tri(mat, diag=FALSE)] <- fp$pval[upper.tri(fp$pval, diag=TRUE)]
@@ -75,6 +89,15 @@ diag(mat) <- 0
 mat <- as.data.frame(mat)
 names(mat) <- paste0("g", 1:ncol(mat))
 g <- g %>% bind_cols(mat)
+
+if(order == "size-ascending"){
+  g <- g %>% arrange(.data$y)
+}
+if(order == "size-descending"){
+  g <- g %>% arrange(-.data$y)
+}
+
+
 
   h <- '
     <meta charset="utf-8">
@@ -237,7 +260,7 @@ g <- g %>% bind_cols(mat)
                 .attr("y1", ylMap(data[m]))
                 .attr("x2", xMap(data[m]))
                 .attr("y2", yuMap(data[m]))
-                .attr("stroke", ', colors[3], ')
+                .attr("stroke", "', colors[3], '")
                 .attr("stroke-width",', lineSize[2], ')
     }
 
@@ -274,14 +297,16 @@ g <- g %>% bind_cols(mat)
 ##' @export
 sigd3.mcmc.list <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
                        ylab = paste0("Effect of ", term), axfont = 12, labfont=12,
-                       labfam = c("sans-serif", "serif"), colors=c("red", "black", "black"),
-                       ptSize = c(7,5), lineSize=c(3,1.5)){
+                       labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
+                       ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
+                       order=c("size-descending", "size-ascending", "natural")){
 
 object <- do.call(rbind, object)
 sigd3.mcmc(object, term=term, height=height, width=width, return_iFrame=return_iFrame,
              level = level, ylab = ylab, axfont=axfont, labfont=labfont,
-             labfam = labfam, colors=colors,
-             ptSize = c(7,5), lineSize=c(3,1.5))
+             labfam = labfam, colors=colors, ptSize = ptSize, lineSize=lineSize,
+             names=names, order=order)
+
 
 }
 
@@ -292,9 +317,20 @@ sigd3.mcmc(object, term=term, height=height, width=width, return_iFrame=return_i
 ##' @export
 sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
                           ylab = paste0("Effect of ", term), axfont = 12, labfont=12,
-                          labfam = c("sans-serif", "serif"), colors=c("red", "black", "black"),
-                          ptSize = c(7,5), lineSize=c(3,1.5)){
-  labfam = match.arg(labfam)
+                          labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
+                          ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
+                          order=c("size-descending", "size-ascending", "natural")){
+  labfam <- match.arg(labfam)
+  order <- match.arg(order)
+
+  if(!is.null(names)){
+    if(length(names) == ncol(object)){
+      colnames(object) = names
+    } else{
+      stop(paste0("names vector (length ", length(names), " has to be the same as the number of parameters (length, ", ncol(object), ").\n"))
+    }
+
+  }
 
   g <- data.frame(x=colnames(object),
                    y=colMeans(object),
@@ -303,13 +339,10 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
                   obs = 1:ncol(object))
 
   combs <- combn(nrow(g), 2)
-
-  D <- matrix(0, nrow=ncol(object), ncol=ncol(combs))
-  D[cbind(combs[1,], 1:ncol(D))] <- -1
-  D[cbind(combs[2,], 1:ncol(D))] <- 1
-  diffs <- object %*% D
-  g0 <- apply(diffs, 2, function(x)x > 0)
-  g0 <- colMeans(g0)
+  m1 <- object[,combs[1,]]
+  m2 <- object[,combs[2,]]
+  diffs <- m2-m1
+  g0 <- apply(diffs, 2, function(x)mean(x > 0))
 
   mat <- matrix(0, nrow=ncol(object), ncol=ncol(object))
   mat[cbind(combs[1,], combs[2,])] <- g0
@@ -320,6 +353,15 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
   mat <- as.data.frame(mat)
   names(mat) <- paste0("g", 1:ncol(mat))
   g <- g %>% bind_cols(mat)
+
+  if(order == "size-ascending"){
+    g <- g %>% arrange(.data$y)
+  }
+  if(order == "size-descending"){
+    g <- g %>% arrange(-.data$y)
+  }
+
+
 
   h <- '
     <meta charset="utf-8">
@@ -482,7 +524,7 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
                 .attr("y1", ylMap(data[m]))
                 .attr("x2", xMap(data[m]))
                 .attr("y2", yuMap(data[m]))
-                .attr("stroke", ', colors[3], ')
+                .attr("stroke", "', colors[3], '")
                 .attr("stroke-width",', lineSize[2], ')
     }
 
@@ -544,6 +586,9 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
 ##' @param colors Vector of three colors the first for the selected items, the second for the un-selected items and the third for when no points are hovered over.
 ##' @param ptSize Vector of two point sizes - the first for selected observations and the second for unselected ones.
 ##' @param lineSize Vector of line widths - the first for selected observations and the second for unselected ones.
+##' @param names An optional vector of names for the parameters.
+##' @param order How should parameters be organized by size-ascending, size-descending or natural (i.e., the order in the data).
+
 ##'
 ##' @importFrom ggeffects ggpredict
 ##' @importFrom factorplot factorplot
@@ -560,8 +605,9 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
 
 sigd3h <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
                   ylab = paste0("Effect of ", term), axfont = 12, labfont=12, lmexpand=.15,
-                  labfam = c("sans-serif", "serif"), colors=c("red", "black", "black"),
-                  ptSize = c(7,5), lineSize=c(3,1.5)){
+                  labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
+                  ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
+                  order=c("size-descending", "size-ascending", "natural")){
   UseMethod("sigd3h")
 }
 
@@ -569,9 +615,11 @@ sigd3h <- function(object, term, fname, height=500, width=625, return_iFrame = T
 ##' @export
 sigd3h.default <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
                           ylab = paste0("Effect of ", term), axfont = 12, labfont=12, lmexpand=.15,
-                          labfam = c("sans-serif", "serif"), colors=c("red", "black", "black"),
-                          ptSize = c(7,5), lineSize=c(3,1.5)){
+                          labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
+                          ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
+                          order=c("size-descending", "size-ascending", "natural")){
   labfam = match.arg(labfam)
+  order <- match.arg(order)
   g <- ggpredict(object, terms=term)
   g <- g %>% mutate(obs=1:nrow(g)) %>%
     rename("y" = "x",
@@ -579,6 +627,13 @@ sigd3h.default <- function(object, term, fname, height=500, width=625, return_iF
            "xlow" = "conf.low",
            "xup" = "conf.high") %>%
     select("x","y","xlow","xup","obs")
+    if(!is.null(names)){
+      if(length(names) == nrow(g)){
+        g <- mutate(y = names)
+      } else{
+        stop(paste0("names vector (length ", length(names), " has to be the same as the number of parameters (length, ", nrow(g), ").\n"))
+      }
+    }
   fp <- factorplot(object, factor.var=term, pval=1-level)
   mat <- matrix(0, nrow=nrow(fp$pval)+1, ncol=ncol(fp$pval)+1)
   mat[upper.tri(mat, diag=FALSE)] <- fp$pval[upper.tri(fp$pval, diag=TRUE)]
@@ -590,6 +645,12 @@ sigd3h.default <- function(object, term, fname, height=500, width=625, return_iF
   mat <- as.data.frame(mat)
   names(mat) <- paste0("g", 1:ncol(mat))
   g <- g %>% bind_cols(mat)
+  if(order == "size-ascending"){
+    g <- g %>% arrange(.data$x)
+  }
+  if(order == "size-descending"){
+    g <- g %>% arrange(-.data$x)
+  }
 
   h <- '
     <meta charset="utf-8">
@@ -729,7 +790,7 @@ svg.append("text")
 .attr("y2",0 - width/2)
 .attr("dy", "1em")
 .style("text-anchor", "middle")
-.style("font-size","', labfam, 'px")
+.style("font-size","', labfont, 'px")
 .text("', ylab, '")
 .style("font-family", "', labfam, '");
 
@@ -742,7 +803,7 @@ for(m=0; m<data.length; m++){
   .attr("y1", yMap(data[m]))
   .attr("x2", xuMap(data[m]))
   .attr("y2", yMap(data[m]))
-  .attr("stroke", "black")
+  .attr("stroke", "', colors[3], '")
   .attr("stroke-width",', lineSize[2], ')
 }
 
@@ -781,16 +842,17 @@ d3.selectAll(".tick").style("font-size", "', axfont, 'px")
 ##' @method sigd3h mcmc.list
 ##' @export
 sigd3h.mcmc.list <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
-                            ylab = paste0("Effect of ", term), axfont = 12, labfont=12,
-                            labfam = c("sans-serif", "serif"), colors=c("red", "black", "black"),
-                            ptSize = c(7,5), lineSize=c(3,1.5)){
+                            ylab = paste0("Effect of ", term), axfont = 12, labfont=12, lmexpand=.15,
+                            labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
+                            ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
+                            order=c("size-descending", "size-ascending", "natural")){
 
   object <- do.call(rbind, object)
 
   sigd3h.mcmc(object=object, term=term, fname=fname, height=height, width=width,
               return_iFrame = return_iFrame, level=level, ylab = ylab, axfont = axfont,
               labfont=labfont, lmexpand=lmexpand, labfam=labfam, colors=colors,
-              ptSize=ptSize, lineSize=lineSize)
+              ptSize=ptSize, lineSize=lineSize, names=names, order=order)
 }
 
 
@@ -800,10 +862,20 @@ sigd3h.mcmc.list <- function(object, term, fname, height=500, width=625, return_
 ##' @export
 sigd3h.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
                            ylab = paste0("Effect of ", term), axfont = 12, labfont=12, lmexpand=.15,
-                           labfam = c("sans-serif", "serif"), colors=c("red", "black", "black"),
-                           ptSize = c(7,5), lineSize=c(3,1.5)){
+                           labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
+                           ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
+                        order=c("size-descending", "size-ascending", "natural")){
   labfam = match.arg(labfam)
+  order <- match.arg(order)
 
+  if(!is.null(names)){
+    if(length(names) == ncol(object)){
+      colnames(object) = names
+    } else{
+      stop(paste0("names vector (length ", length(names), " has to be the same as the number of parameters (length, ", ncol(object), ").\n"))
+    }
+
+  }
   g <- data.frame(y=colnames(object),
                   x=colMeans(object),
                   xlow = apply(object, 2, quantile, (1-level)/2),
@@ -811,13 +883,10 @@ sigd3h.mcmc <- function(object, term, fname, height=500, width=625, return_iFram
                   obs = 1:ncol(object))
 
   combs <- combn(ncol(object), 2)
-
-  D <- matrix(0, nrow=ncol(object), ncol=ncol(combs))
-  D[cbind(combs[1,], 1:ncol(D))] <- -1
-  D[cbind(combs[2,], 1:ncol(D))] <- 1
-  diffs <- object %*% D
-  g0 <- apply(diffs, 2, function(x)x > 0)
-  g0 <- colMeans(g0)
+  m1 <- object[,combs[1,]]
+  m2 <- object[,combs[2,]]
+  diffs <- m2-m1
+  g0 <- apply(diffs, 2, function(x)mean(x > 0))
 
   mat <- matrix(0, nrow=ncol(object), ncol=ncol(object))
   mat[cbind(combs[1,], combs[2,])] <- g0
@@ -828,6 +897,12 @@ sigd3h.mcmc <- function(object, term, fname, height=500, width=625, return_iFram
   mat <- as.data.frame(mat)
   names(mat) <- paste0("g", 1:ncol(mat))
   g <- g %>% bind_cols(mat)
+  if(order == "size-ascending"){
+    g <- g %>% arrange(.data$x)
+  }
+  if(order == "size-descending"){
+    g <- g %>% arrange(-.data$x)
+  }
 
   h <- '
     <meta charset="utf-8">
@@ -967,7 +1042,7 @@ svg.append("text")
 .attr("y2",0 - width/2)
 .attr("dy", "1em")
 .style("text-anchor", "middle")
-.style("font-size","', labfam, 'px")
+.style("font-size","', labfont, 'px")
 .text("', ylab, '")
 .style("font-family", "', labfam, '");
 
@@ -980,7 +1055,7 @@ for(m=0; m<data.length; m++){
   .attr("y1", yMap(data[m]))
   .attr("x2", xuMap(data[m]))
   .attr("y2", yMap(data[m]))
-  .attr("stroke", "black")
+  .attr("stroke", "', colors[3], '")
   .attr("stroke-width",', lineSize[2], ')
 }
 
@@ -1013,3 +1088,22 @@ d3.selectAll(".tick").style("font-size", "', axfont, 'px")
     tags$iframe(src=fname, height=height*1.05, width=width*1.05, style="border: none")
   }
 }
+
+
+#' Corporatism
+#'
+#' A dataset from Alvarez, Garrett and Lange's 1991 APSR article.
+#'
+#' @format A list with the following variables for 16 countries over 14 years:
+#' \describe{
+#'   \item{y}{Economic growth}
+#'   \item{country}{Country indicator variable}
+#'   \item{imports}{Imports price movement}
+#'   \item{exports}{Export price movement}
+#'   \item{left}{Leftist government}
+#'   \item{demand}{Demand}
+#'   \item{growth.lag}{Lag of economic growth}
+#'   \item{labor.org}{Labor organizations prevalence, only one observation per country}
+#' }
+#' @source \url{https://spia.uga.edu/faculty_pages/rbakker/bayes/POLS%20Bayes.htm}
+"corp"
