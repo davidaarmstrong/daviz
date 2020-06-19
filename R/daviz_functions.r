@@ -44,62 +44,96 @@
 ##' @export
 
 
-sigd3 <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
-                  ylab = paste0("Effect of ", term), axfont = 12, labfont=12,
-                  labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
-                  ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
-                  order=c("size-descending", "size-ascending", "natural")){
-  UseMethod("sigd3")
-}
+sigd3 <-
+  function(object,
+           term,
+           fname,
+           height = 500,
+           width = 625,
+           return_iFrame = TRUE,
+           level = .95,
+           ylab = paste0("Effect of ", term),
+           axfont = 12,
+           labfont = 12,
+           labfam = c("sans-serif", "serif"),
+           colors = c("#B80000", "#000000", "#000000"),
+           ptSize = c(7, 5),
+           lineSize = c(3, 1.5),
+           names = NULL,
+           order = c("size-descending", "size-ascending", "natural")) {
+    UseMethod("sigd3")
+  }
 
 
 
 
 ##' @method sigd3 default
 ##' @export
-sigd3.default <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
-                  ylab = paste0("Effect of ", term), axfont = 12, labfont=12,
-                  labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
-                  ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
-                  order=c("size-descending", "size-ascending", "natural")){
-labfam <- match.arg(labfam)
-order <- match.arg(order)
-g <- ggpredict(object, terms=term)
-g <- g %>% mutate(obs=1:nrow(g)) %>%
-  rename("y"="predicted",
-         "ylow" = "conf.low",
-         "yup" = "conf.high") %>%
-  select("x","y","ylow","yup","obs")
-if(!is.null(names)){
-  if(length(names) == nrow(g)){
-    g <- mutate(x = names)
-  } else{
-    stop(paste0("names vector (length ", length(names), " has to be the same as the number of parameters (length, ", nrow(g), ").\n"))
-  }
-}
+sigd3.default <-
+  function(object,
+           term,
+           fname,
+           height = 500,
+           width = 625,
+           return_iFrame = TRUE,
+           level = .95,
+           ylab = paste0("Effect of ", term),
+           axfont = 12,
+           labfont = 12,
+           labfam = c("sans-serif", "serif"),
+           colors = c("#B80000", "#000000", "#000000"),
+           ptSize = c(7, 5),
+           lineSize = c(3, 1.5),
+           names = NULL,
+           order = c("size-descending", "size-ascending", "natural")) {
+    labfam <- match.arg(labfam)
+    order <- match.arg(order)
+    g <- ggpredict(object, terms = term)
+    g <- g %>% mutate(obs = 1:nrow(g)) %>%
+      rename("y" = "predicted",
+             "ylow" = "conf.low",
+             "yup" = "conf.high") %>%
+      select("x", "y", "ylow", "yup", "obs")
+    if (!is.null(names)) {
+      if (length(names) == nrow(g)) {
+        g <- mutate(x = names)
+      } else{
+        stop(
+          paste0(
+            "names vector (length ",
+            length(names),
+            " has to be the same as the number of parameters (length, ",
+            nrow(g),
+            ").\n"
+          )
+        )
+      }
+    }
 
-fp <- factorplot(object, factor.var=term, pval=1-level)
-mat <- matrix(0, nrow=nrow(fp$pval)+1, ncol=ncol(fp$pval)+1)
-mat[upper.tri(mat, diag=FALSE)] <- fp$pval[upper.tri(fp$pval, diag=TRUE)]
-mat <- t(mat)
-mat[upper.tri(mat, diag=FALSE)] <- fp$pval[upper.tri(fp$pval, diag=TRUE)]
-mat <- ifelse(mat < .05, 1, 0)
-diag(mat) <- 0
+    fp <- factorplot(object, factor.var = term, pval = 1 - level)
+    mat <- matrix(0, nrow = nrow(fp$pval) + 1, ncol = ncol(fp$pval) + 1)
+    mat[upper.tri(mat, diag = FALSE)] <-
+      fp$pval[upper.tri(fp$pval, diag = TRUE)]
+    mat <- t(mat)
+    mat[upper.tri(mat, diag = FALSE)] <-
+      fp$pval[upper.tri(fp$pval, diag = TRUE)]
+    mat <- ifelse(mat < .05, 1, 0)
+    diag(mat) <- 0
 
-mat <- as.data.frame(mat)
-names(mat) <- paste0("g", 1:ncol(mat))
-g <- g %>% bind_cols(mat)
+    mat <- as.data.frame(mat)
+    names(mat) <- paste0("g", 1:ncol(mat))
+    g <- g %>% bind_cols(mat)
 
-if(order == "size-ascending"){
-  g <- g %>% arrange(.data$y)
-}
-if(order == "size-descending"){
-  g <- g %>% arrange(-.data$y)
-}
+    if (order == "size-ascending") {
+      g <- g %>% arrange(.data$y)
+    }
+    if (order == "size-descending") {
+      g <- g %>% arrange(-.data$y)
+    }
 
 
 
-  h <- '
+    h <- '
     <meta charset="utf-8">
     <head>
     </head>
@@ -110,13 +144,20 @@ if(order == "size-descending"){
 
     <script>'
 
-  b <- paste0('
+    b <- paste0(
+      '
   </script>
 
   <script>
-    var h=', height, ';
-    var w =', width, ';
-    var margin = {top: h*.02, right: w*.15, bottom: h*', round(.1*(axfont/8), 2), ', left: w*.1},
+    var h=',
+      height,
+      ';
+    var w =',
+      width,
+      ';
+    var margin = {top: h*.02, right: w*.15, bottom: h*',
+      round(.1 * (axfont / 8), 2),
+      ', left: w*.1},
         width = w - margin.left - margin.right,
         height = h - margin.top - margin.bottom;
 
@@ -191,26 +232,42 @@ if(order == "size-descending"){
         d3.selectAll(".dot-selected")
           .transition()
           .duration(50)
-          .style("fill", "', colors[1], '")
-          .attr("r",', ptSize[1],')
+          .style("fill", "',
+      colors[1],
+      '")
+          .attr("r",',
+      ptSize[1],
+      ')
 
         d3.selectAll(".line-selected")
           .transition()
           .duration(50)
-          .style("stroke", "', colors[1], '")
-          .attr("stroke-width",', lineSize[1], ')
+          .style("stroke", "',
+      colors[1],
+      '")
+          .attr("stroke-width",',
+      lineSize[1],
+      ')
 
         d3.selectAll(".dot-unselected")
           .transition()
           .duration(50)
-          .style("fill", "', colors[2], '")
-          .attr("r",', ptSize[2], ')
+          .style("fill", "',
+      colors[2],
+      '")
+          .attr("r",',
+      ptSize[2],
+      ')
 
         d3.selectAll(".line-unselected")
           .transition()
           .duration(50)
-          .style("stroke", "', colors[2], '")
-          .attr("stroke-width",', lineSize[2], ')
+          .style("stroke", "',
+      colors[2],
+      '")
+          .attr("stroke-width",',
+      lineSize[2],
+      ')
         }
 
 
@@ -221,14 +278,22 @@ if(order == "size-descending"){
         d3.selectAll(".dot")
           .transition()
           .duration(200)
-          .style("fill", "', colors[3], '")
-          .attr("r",', ptSize[1], ')
+          .style("fill", "',
+      colors[3],
+      '")
+          .attr("r",',
+      ptSize[1],
+      ')
 
         d3.selectAll(".line")
           .transition()
           .duration(200)
-          .style("stroke", "', colors[3], '")
-          .attr("stroke-width",', lineSize[2], ')
+          .style("stroke", "',
+      colors[3],
+      '")
+          .attr("stroke-width",',
+      lineSize[2],
+      ')
 
       }
 
@@ -247,9 +312,15 @@ if(order == "size-descending"){
       .attr("x",0 - (height / 2))
       .attr("dy", "1em")
       .style("text-anchor", "middle")
-      .style("font-size","', labfont, 'px")
-      .text("', ylab, '")
-      .style("font-family", "', labfam, '");
+      .style("font-size","',
+      labfont,
+      'px")
+      .text("',
+      ylab,
+      '")
+      .style("font-family", "',
+      labfam,
+      '");
 
     var m;
     for(m=0; m<data.length; m++){
@@ -260,8 +331,12 @@ if(order == "size-descending"){
                 .attr("y1", ylMap(data[m]))
                 .attr("x2", xMap(data[m]))
                 .attr("y2", yuMap(data[m]))
-                .attr("stroke", "', colors[3], '")
-                .attr("stroke-width",', lineSize[2], ')
+                .attr("stroke", "',
+      colors[3],
+      '")
+                .attr("stroke-width",',
+      lineSize[2],
+      ')
     }
 
     svg
@@ -270,100 +345,170 @@ if(order == "size-descending"){
         .enter()
         .append("circle")
           .attr("class", "dot")
-          .attr("r",', ptSize[2], ')
+          .attr("r",',
+      ptSize[2],
+      ')
           .attr("cx", xMap)
           .attr("cy", yMap)
         .on("mouseover", highlight)
         .on("mouseleave", doNotHighlight )
 
-    d3.selectAll(".tick").style("font-size", "', axfont, 'px")
+    d3.selectAll(".tick").style("font-size", "',
+      axfont,
+      'px")
 
     </script>
   </body>
-')
-  cat(h, "\n", sep="", file=fname, append=FALSE)
+'
+    )
+    cat(h,
+        "\n",
+        sep = "",
+        file = fname,
+        append = FALSE)
 
-  cat("var data = ", toJSON(g), ";\n", sep="",
-      file=fname, append=TRUE)
+    cat(
+      "var data = ",
+      toJSON(g),
+      ";\n",
+      sep = "",
+      file = fname,
+      append = TRUE
+    )
 
-  cat(b, sep="", file=fname, append=TRUE)
+    cat(b,
+        sep = "",
+        file = fname,
+        append = TRUE)
 
-  tags$iframe(src=fname, height=height*1.05, width=width*1.05, style="border: none")
-}
+    tags$iframe(
+      src = fname,
+      height = height * 1.05,
+      width = width * 1.05,
+      style = "border: none"
+    )
+  }
 
 
 
 ##' @method sigd3 mcmc.list
 ##' @export
-sigd3.mcmc.list <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
-                       ylab = paste0("Effect of ", term), axfont = 12, labfont=12,
-                       labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
-                       ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
-                       order=c("size-descending", "size-ascending", "natural")){
+sigd3.mcmc.list <-
+  function(object,
+           term,
+           fname,
+           height = 500,
+           width = 625,
+           return_iFrame = TRUE,
+           level = .95,
+           ylab = paste0("Effect of ", term),
+           axfont = 12,
+           labfont = 12,
+           labfam = c("sans-serif", "serif"),
+           colors = c("#B80000", "#000000", "#000000"),
+           ptSize = c(7, 5),
+           lineSize = c(3, 1.5),
+           names = NULL,
+           order = c("size-descending", "size-ascending", "natural")) {
+    object <- do.call(rbind, object)
+    sigd3.mcmc(
+      object,
+      term = term,
+      height = height,
+      width = width,
+      return_iFrame = return_iFrame,
+      level = level,
+      ylab = ylab,
+      axfont = axfont,
+      labfont = labfont,
+      labfam = labfam,
+      colors = colors,
+      ptSize = ptSize,
+      lineSize = lineSize,
+      names = names,
+      order = order
+    )
 
-object <- do.call(rbind, object)
-sigd3.mcmc(object, term=term, height=height, width=width, return_iFrame=return_iFrame,
-             level = level, ylab = ylab, axfont=axfont, labfont=labfont,
-             labfam = labfam, colors=colors, ptSize = ptSize, lineSize=lineSize,
-             names=names, order=order)
 
-
-}
+  }
 
 
 
 
 ##' @method sigd3 mcmc
 ##' @export
-sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
-                          ylab = paste0("Effect of ", term), axfont = 12, labfont=12,
-                          labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
-                          ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
-                          order=c("size-descending", "size-ascending", "natural")){
-  labfam <- match.arg(labfam)
-  order <- match.arg(order)
+sigd3.mcmc <-
+  function(object,
+           term,
+           fname,
+           height = 500,
+           width = 625,
+           return_iFrame = TRUE,
+           level = .95,
+           ylab = paste0("Effect of ", term),
+           axfont = 12,
+           labfont = 12,
+           labfam = c("sans-serif", "serif"),
+           colors = c("#B80000", "#000000", "#000000"),
+           ptSize = c(7, 5),
+           lineSize = c(3, 1.5),
+           names = NULL,
+           order = c("size-descending", "size-ascending", "natural")) {
+    labfam <- match.arg(labfam)
+    order <- match.arg(order)
 
-  if(!is.null(names)){
-    if(length(names) == ncol(object)){
-      colnames(object) = names
-    } else{
-      stop(paste0("names vector (length ", length(names), " has to be the same as the number of parameters (length, ", ncol(object), ").\n"))
+    if (!is.null(names)) {
+      if (length(names) == ncol(object)) {
+        colnames(object) = names
+      } else{
+        stop(
+          paste0(
+            "names vector (length ",
+            length(names),
+            " has to be the same as the number of parameters (length, ",
+            ncol(object),
+            ").\n"
+          )
+        )
+      }
+
     }
 
-  }
+    g <- data.frame(
+      x = colnames(object),
+      y = colMeans(object),
+      ylow = apply(object, 2, quantile, (1 - level) / 2),
+      yup = apply(object, 2, quantile, 1 - (1 - level) / 2),
+      obs = 1:ncol(object)
+    )
 
-  g <- data.frame(x=colnames(object),
-                   y=colMeans(object),
-                   ylow = apply(object, 2, quantile, (1-level)/2),
-                   yup = apply(object, 2, quantile, 1-(1-level)/2),
-                  obs = 1:ncol(object))
+    combs <- combn(nrow(g), 2)
+    m1 <- object[, combs[1, ]]
+    m2 <- object[, combs[2, ]]
+    diffs <- m2 - m1
+    g0 <- apply(diffs, 2, function(x)
+      mean(x > 0))
 
-  combs <- combn(nrow(g), 2)
-  m1 <- object[,combs[1,]]
-  m2 <- object[,combs[2,]]
-  diffs <- m2-m1
-  g0 <- apply(diffs, 2, function(x)mean(x > 0))
+    mat <- matrix(0, nrow = ncol(object), ncol = ncol(object))
+    mat[cbind(combs[1, ], combs[2, ])] <- g0
+    mat <- t(mat)
+    mat[cbind(combs[1, ], combs[2, ])] <- g0
+    mat <- ifelse(mat > level | mat < (1 - level), 1, 0)
+    diag(mat) <- 0
+    mat <- as.data.frame(mat)
+    names(mat) <- paste0("g", 1:ncol(mat))
+    g <- g %>% bind_cols(mat)
 
-  mat <- matrix(0, nrow=ncol(object), ncol=ncol(object))
-  mat[cbind(combs[1,], combs[2,])] <- g0
-  mat <- t(mat)
-  mat[cbind(combs[1,], combs[2,])] <- g0
-  mat <- ifelse(mat > level | mat < (1-level), 1, 0)
-  diag(mat) <- 0
-  mat <- as.data.frame(mat)
-  names(mat) <- paste0("g", 1:ncol(mat))
-  g <- g %>% bind_cols(mat)
-
-  if(order == "size-ascending"){
-    g <- g %>% arrange(.data$y)
-  }
-  if(order == "size-descending"){
-    g <- g %>% arrange(-.data$y)
-  }
+    if (order == "size-ascending") {
+      g <- g %>% arrange(.data$y)
+    }
+    if (order == "size-descending") {
+      g <- g %>% arrange(-.data$y)
+    }
 
 
 
-  h <- '
+    h <- '
     <meta charset="utf-8">
     <head>
     </head>
@@ -374,13 +519,20 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
 
     <script>'
 
-  b <- paste0('
+    b <- paste0(
+      '
   </script>
 
   <script>
-    var h=', height, ';
-    var w =', width, ';
-    var margin = {top: h*.02, right: w*.15, bottom: h*', round(.1*(axfont/8), 2), ', left: w*.1},
+    var h=',
+      height,
+      ';
+    var w =',
+      width,
+      ';
+    var margin = {top: h*.02, right: w*.15, bottom: h*',
+      round(.1 * (axfont / 8), 2),
+      ', left: w*.1},
         width = w - margin.left - margin.right,
         height = h - margin.top - margin.bottom;
 
@@ -455,26 +607,42 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
         d3.selectAll(".dot-selected")
           .transition()
           .duration(50)
-          .style("fill", "', colors[1], '")
-          .attr("r",', ptSize[1],')
+          .style("fill", "',
+      colors[1],
+      '")
+          .attr("r",',
+      ptSize[1],
+      ')
 
         d3.selectAll(".line-selected")
           .transition()
           .duration(50)
-          .style("stroke", "', colors[1], '")
-          .attr("stroke-width",', lineSize[1], ')
+          .style("stroke", "',
+      colors[1],
+      '")
+          .attr("stroke-width",',
+      lineSize[1],
+      ')
 
         d3.selectAll(".dot-unselected")
           .transition()
           .duration(50)
-          .style("fill", "', colors[2], '")
-          .attr("r",', ptSize[2], ')
+          .style("fill", "',
+      colors[2],
+      '")
+          .attr("r",',
+      ptSize[2],
+      ')
 
         d3.selectAll(".line-unselected")
           .transition()
           .duration(50)
-          .style("stroke", "', colors[2], '")
-          .attr("stroke-width",', lineSize[2], ')
+          .style("stroke", "',
+      colors[2],
+      '")
+          .attr("stroke-width",',
+      lineSize[2],
+      ')
         }
 
 
@@ -485,14 +653,22 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
         d3.selectAll(".dot")
           .transition()
           .duration(200)
-          .style("fill", "', colors[3], '")
-          .attr("r",', ptSize[1], ')
+          .style("fill", "',
+      colors[3],
+      '")
+          .attr("r",',
+      ptSize[1],
+      ')
 
         d3.selectAll(".line")
           .transition()
           .duration(200)
-          .style("stroke", "', colors[3], '")
-          .attr("stroke-width",', lineSize[2], ')
+          .style("stroke", "',
+      colors[3],
+      '")
+          .attr("stroke-width",',
+      lineSize[2],
+      ')
 
       }
 
@@ -511,9 +687,15 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
       .attr("x",0 - (height / 2))
       .attr("dy", "1em")
       .style("text-anchor", "middle")
-      .style("font-size","', labfont, 'px")
-      .text("', ylab, '")
-      .style("font-family", "', labfam, '");
+      .style("font-size","',
+      labfont,
+      'px")
+      .text("',
+      ylab,
+      '")
+      .style("font-family", "',
+      labfam,
+      '");
 
     var m;
     for(m=0; m<data.length; m++){
@@ -524,8 +706,12 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
                 .attr("y1", ylMap(data[m]))
                 .attr("x2", xMap(data[m]))
                 .attr("y2", yuMap(data[m]))
-                .attr("stroke", "', colors[3], '")
-                .attr("stroke-width",', lineSize[2], ')
+                .attr("stroke", "',
+      colors[3],
+      '")
+                .attr("stroke-width",',
+      lineSize[2],
+      ')
     }
 
     svg
@@ -534,26 +720,49 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
         .enter()
         .append("circle")
           .attr("class", "dot")
-          .attr("r",', ptSize[2], ')
+          .attr("r",',
+      ptSize[2],
+      ')
           .attr("cx", xMap)
           .attr("cy", yMap)
         .on("mouseover", highlight)
         .on("mouseleave", doNotHighlight )
 
-    d3.selectAll(".tick").style("font-size", "', axfont, 'px")
+    d3.selectAll(".tick").style("font-size", "',
+      axfont,
+      'px")
 
     </script>
   </body>
-')
-  cat(h, "\n", sep="", file=fname, append=FALSE)
+'
+    )
+    cat(h,
+        "\n",
+        sep = "",
+        file = fname,
+        append = FALSE)
 
-  cat("var data = ", toJSON(g), ";\n", sep="",
-      file=fname, append=TRUE)
+    cat(
+      "var data = ",
+      toJSON(g),
+      ";\n",
+      sep = "",
+      file = fname,
+      append = TRUE
+    )
 
-  cat(b, sep="", file=fname, append=TRUE)
+    cat(b,
+        sep = "",
+        file = fname,
+        append = TRUE)
 
-  tags$iframe(src=fname, height=height*1.05, width=width*1.05, style="border: none")
-}
+    tags$iframe(
+      src = fname,
+      height = height * 1.05,
+      width = width * 1.05,
+      style = "border: none"
+    )
+  }
 
 ##' Significance Plot with D3 (horizontal)
 ##'
@@ -603,56 +812,94 @@ sigd3.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame
 ##' @export
 
 
-sigd3h <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
-                  ylab = paste0("Effect of ", term), axfont = 12, labfont=12, lmexpand=.15,
-                  labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
-                  ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
-                  order=c("size-descending", "size-ascending", "natural")){
-  UseMethod("sigd3h")
-}
+sigd3h <-
+  function(object,
+           term,
+           fname,
+           height = 500,
+           width = 625,
+           return_iFrame = TRUE,
+           level = .95,
+           ylab = paste0("Effect of ", term),
+           axfont = 12,
+           labfont = 12,
+           lmexpand = .15,
+           labfam = c("sans-serif", "serif"),
+           colors = c("#B80000", "#000000", "#000000"),
+           ptSize = c(7, 5),
+           lineSize = c(3, 1.5),
+           names = NULL,
+           order = c("size-descending", "size-ascending", "natural")) {
+    UseMethod("sigd3h")
+  }
 
 ##' @method sigd3h default
 ##' @export
-sigd3h.default <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
-                          ylab = paste0("Effect of ", term), axfont = 12, labfont=12, lmexpand=.15,
-                          labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
-                          ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
-                          order=c("size-descending", "size-ascending", "natural")){
-  labfam = match.arg(labfam)
-  order <- match.arg(order)
-  g <- ggpredict(object, terms=term)
-  g <- g %>% mutate(obs=1:nrow(g)) %>%
-    rename("y" = "x",
-           "x"="predicted",
-           "xlow" = "conf.low",
-           "xup" = "conf.high") %>%
-    select("x","y","xlow","xup","obs")
-    if(!is.null(names)){
-      if(length(names) == nrow(g)){
+sigd3h.default <-
+  function(object,
+           term,
+           fname,
+           height = 500,
+           width = 625,
+           return_iFrame = TRUE,
+           level = .95,
+           ylab = paste0("Effect of ", term),
+           axfont = 12,
+           labfont = 12,
+           lmexpand = .15,
+           labfam = c("sans-serif", "serif"),
+           colors = c("#B80000", "#000000", "#000000"),
+           ptSize = c(7, 5),
+           lineSize = c(3, 1.5),
+           names = NULL,
+           order = c("size-descending", "size-ascending", "natural")) {
+    labfam = match.arg(labfam)
+    order <- match.arg(order)
+    g <- ggpredict(object, terms = term)
+    g <- g %>% mutate(obs = 1:nrow(g)) %>%
+      rename(
+        "y" = "x",
+        "x" = "predicted",
+        "xlow" = "conf.low",
+        "xup" = "conf.high"
+      ) %>%
+      select("x", "y", "xlow", "xup", "obs")
+    if (!is.null(names)) {
+      if (length(names) == nrow(g)) {
         g <- mutate(y = names)
       } else{
-        stop(paste0("names vector (length ", length(names), " has to be the same as the number of parameters (length, ", nrow(g), ").\n"))
+        stop(
+          paste0(
+            "names vector (length ",
+            length(names),
+            " has to be the same as the number of parameters (length, ",
+            nrow(g),
+            ").\n"
+          )
+        )
       }
     }
-  fp <- factorplot(object, factor.var=term, pval=1-level)
-  mat <- matrix(0, nrow=nrow(fp$pval)+1, ncol=ncol(fp$pval)+1)
-  mat[upper.tri(mat, diag=FALSE)] <- fp$pval[upper.tri(fp$pval, diag=TRUE)]
-  mat <- t(mat)
-  mat[upper.tri(mat, diag=FALSE)] <- fp$pval[upper.tri(fp$pval, diag=TRUE)]
-  mat <- ifelse(mat < .05, 1, 0)
-  diag(mat) <- 0
+    fp <- factorplot(object, factor.var = term, pval = 1 - level)
+    mat <- matrix(0, nrow = nrow(fp$pval) + 1, ncol = ncol(fp$pval) + 1)
+    mat[upper.tri(mat, diag = FALSE)] <-
+      fp$pval[upper.tri(fp$pval, diag = TRUE)]
+    mat <- t(mat)
+    mat[upper.tri(mat, diag = FALSE)] <-
+      fp$pval[upper.tri(fp$pval, diag = TRUE)]
+    mat <- ifelse(mat < .05, 1, 0)
+    diag(mat) <- 0
 
-  mat <- as.data.frame(mat)
-  names(mat) <- paste0("g", 1:ncol(mat))
-  g <- g %>% bind_cols(mat)
-  if(order == "size-ascending"){
-    g <- g %>% arrange(.data$x)
-  }
-  if(order == "size-descending"){
-    g <- g %>% arrange(-.data$x)
-  }
+    mat <- as.data.frame(mat)
+    names(mat) <- paste0("g", 1:ncol(mat))
+    g <- g %>% bind_cols(mat)
+    if (order == "size-ascending") {
+      g <- g %>% arrange(.data$x)
+    }
+    if (order == "size-descending") {
+      g <- g %>% arrange(-.data$x)
+    }
 
-  h <- '
+    h <- '
     <meta charset="utf-8">
     <head>
     </head>
@@ -663,13 +910,22 @@ sigd3h.default <- function(object, term, fname, height=500, width=625, return_iF
 
     <script>'
 
-  b <- paste0('
+    b <- paste0(
+      '
   </script>
 
   <script>
-    var  h=', height, ';
-    var w =', width, ';
-    var margin = {top: h*.02, left: w*', lmexpand, ', bottom: h*', (0.1*(axfont/8)), ', right: w*.05},
+    var  h=',
+      height,
+      ';
+    var w =',
+      width,
+      ';
+    var margin = {top: h*.02, left: w*',
+      lmexpand,
+      ', bottom: h*',
+      (0.1 * (axfont / 8)),
+      ', right: w*.05},
       width = w - margin.left - margin.right,
       height = h - margin.top - margin.bottom;
 
@@ -735,26 +991,42 @@ var highlight = function(d){
   d3.selectAll(".dot-selected")
   .transition()
   .duration(50)
-  .style("fill", "', colors[1], '")
-  .attr("r",', ptSize[1], ')
+  .style("fill", "',
+      colors[1],
+      '")
+  .attr("r",',
+      ptSize[1],
+      ')
 
   d3.selectAll(".line-selected")
   .transition()
   .duration(50)
-  .style("stroke", "', colors[1], '")
-  .attr("stroke-width",', lineSize[1], ')
+  .style("stroke", "',
+      colors[1],
+      '")
+  .attr("stroke-width",',
+      lineSize[1],
+      ')
 
   d3.selectAll(".dot-unselected")
   .transition()
   .duration(50)
-  .style("fill", "', colors[2], '")
-  .attr("r",', ptSize[2], ')
+  .style("fill", "',
+      colors[2],
+      '")
+  .attr("r",',
+      ptSize[2],
+      ')
 
   d3.selectAll(".line-unselected")
   .transition()
   .duration(50)
-  .style("stroke", "', colors[2], '")
-  .attr("stroke-width",', lineSize[2], ')
+  .style("stroke", "',
+      colors[2],
+      '")
+  .attr("stroke-width",',
+      lineSize[2],
+      ')
 }
 
 
@@ -825,86 +1097,155 @@ d3.selectAll(".tick").style("font-size", "', axfont, 'px")
 </body>
 ')
 
-  cat(h, "\n", sep="", file=fname, append=FALSE)
+    cat(h,
+        "\n",
+        sep  =  "",
+        file  =  fname,
+        append  =  FALSE)
 
-  cat("var data = ", toJSON(g), ";\n", sep="",
-      file=fname, append=TRUE)
+    cat(
+      "var data = ",
+      toJSON(g),
+      ";\n",
+      sep  =  "",
+      file  =  fname,
+      append  =  TRUE
+    )
 
-  cat(b, sep="", file=fname, append=TRUE)
+    cat(b,
+        sep  =  "",
+        file  =  fname,
+        append  =  TRUE)
 
-  if(return_iFrame){
-    tags$iframe(src=fname, height=height*1.05, width=width*1.05, style="border: none")
+    if (return_iFrame) {
+      tags$iframe(
+        src  =  fname,
+        height  =  height  *  1.05,
+        width  =  width  *  1.05,
+        style  =  "border: none"
+      )
+    }
   }
-}
 
 
 
 ##' @method sigd3h mcmc.list
 ##' @export
-sigd3h.mcmc.list <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
-                            ylab = paste0("Effect of ", term), axfont = 12, labfont=12, lmexpand=.15,
-                            labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
-                            ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
-                            order=c("size-descending", "size-ascending", "natural")){
+sigd3h.mcmc.list <-
+  function(object,
+           term,
+           fname,
+           height = 500,
+           width = 625,
+           return_iFrame = TRUE,
+           level = .95,
+           ylab = paste0("Effect of ", term),
+           axfont = 12,
+           labfont = 12,
+           lmexpand = .15,
+           labfam = c("sans-serif", "serif"),
+           colors = c("#B80000", "#000000", "#000000"),
+           ptSize = c(7, 5),
+           lineSize = c(3, 1.5),
+           names = NULL,
+           order = c("size-descending", "size-ascending", "natural")) {
+    object <- do.call(rbind, object)
 
-  object <- do.call(rbind, object)
-
-  sigd3h.mcmc(object=object, term=term, fname=fname, height=height, width=width,
-              return_iFrame = return_iFrame, level=level, ylab = ylab, axfont = axfont,
-              labfont=labfont, lmexpand=lmexpand, labfam=labfam, colors=colors,
-              ptSize=ptSize, lineSize=lineSize, names=names, order=order)
-}
+    sigd3h.mcmc(
+      object = object,
+      term = term,
+      fname = fname,
+      height = height,
+      width = width,
+      return_iFrame = return_iFrame,
+      level = level,
+      ylab = ylab,
+      axfont = axfont,
+      labfont = labfont,
+      lmexpand = lmexpand,
+      labfam = labfam,
+      colors = colors,
+      ptSize = ptSize,
+      lineSize = lineSize,
+      names = names,
+      order = order
+    )
+  }
 
 
 
 
 ##' @method sigd3h mcmc
 ##' @export
-sigd3h.mcmc <- function(object, term, fname, height=500, width=625, return_iFrame = TRUE, level=.95,
-                           ylab = paste0("Effect of ", term), axfont = 12, labfont=12, lmexpand=.15,
-                           labfam = c("sans-serif", "serif"), colors=c("#B80000", "#000000", "#000000"),
-                           ptSize = c(7,5), lineSize=c(3,1.5), names=NULL,
-                        order=c("size-descending", "size-ascending", "natural")){
-  labfam = match.arg(labfam)
-  order <- match.arg(order)
+sigd3h.mcmc <-
+  function(object,
+           term,
+           fname,
+           height = 500,
+           width = 625,
+           return_iFrame = TRUE,
+           level = .95,
+           ylab = paste0("Effect of ", term),
+           axfont = 12,
+           labfont = 12,
+           lmexpand = .15,
+           labfam = c("sans-serif", "serif"),
+           colors = c("#B80000", "#000000", "#000000"),
+           ptSize = c(7, 5),
+           lineSize = c(3, 1.5),
+           names = NULL,
+           order = c("size-descending", "size-ascending", "natural")) {
+    labfam = match.arg(labfam)
+    order <- match.arg(order)
 
-  if(!is.null(names)){
-    if(length(names) == ncol(object)){
-      colnames(object) = names
-    } else{
-      stop(paste0("names vector (length ", length(names), " has to be the same as the number of parameters (length, ", ncol(object), ").\n"))
+    if (!is.null(names)) {
+      if (length(names) == ncol(object)) {
+        colnames(object) = names
+      } else{
+        stop(
+          paste0(
+            "names vector (length ",
+            length(names),
+            " has to be the same as the number of parameters (length, ",
+            ncol(object),
+            ").\n"
+          )
+        )
+      }
+
+    }
+    g <- data.frame(
+      y = colnames(object),
+      x = colMeans(object),
+      xlow = apply(object, 2, quantile, (1 - level) / 2),
+      xup = apply(object, 2, quantile, 1 - (1 - level) / 2),
+      obs = 1:ncol(object)
+    )
+
+    combs <- combn(ncol(object), 2)
+    m1 <- object[, combs[1, ]]
+    m2 <- object[, combs[2, ]]
+    diffs <- m2 - m1
+    g0 <- apply(diffs, 2, function(x)
+      mean(x > 0))
+
+    mat <- matrix(0, nrow = ncol(object), ncol = ncol(object))
+    mat[cbind(combs[1, ], combs[2, ])] <- g0
+    mat <- t(mat)
+    mat[cbind(combs[1, ], combs[2, ])] <- g0
+    mat <- ifelse(mat > level | mat < (1 - level), 1, 0)
+    diag(mat) <- 0
+    mat <- as.data.frame(mat)
+    names(mat) <- paste0("g", 1:ncol(mat))
+    g <- g %>% bind_cols(mat)
+    if (order == "size-ascending") {
+      g <- g %>% arrange(.data$x)
+    }
+    if (order == "size-descending") {
+      g <- g %>% arrange(-.data$x)
     }
 
-  }
-  g <- data.frame(y=colnames(object),
-                  x=colMeans(object),
-                  xlow = apply(object, 2, quantile, (1-level)/2),
-                  xup = apply(object, 2, quantile, 1-(1-level)/2),
-                  obs = 1:ncol(object))
-
-  combs <- combn(ncol(object), 2)
-  m1 <- object[,combs[1,]]
-  m2 <- object[,combs[2,]]
-  diffs <- m2-m1
-  g0 <- apply(diffs, 2, function(x)mean(x > 0))
-
-  mat <- matrix(0, nrow=ncol(object), ncol=ncol(object))
-  mat[cbind(combs[1,], combs[2,])] <- g0
-  mat <- t(mat)
-  mat[cbind(combs[1,], combs[2,])] <- g0
-  mat <- ifelse(mat > level | mat < (1-level), 1, 0)
-  diag(mat) <- 0
-  mat <- as.data.frame(mat)
-  names(mat) <- paste0("g", 1:ncol(mat))
-  g <- g %>% bind_cols(mat)
-  if(order == "size-ascending"){
-    g <- g %>% arrange(.data$x)
-  }
-  if(order == "size-descending"){
-    g <- g %>% arrange(-.data$x)
-  }
-
-  h <- '
+    h <- '
     <meta charset="utf-8">
     <head>
     </head>
@@ -915,13 +1256,22 @@ sigd3h.mcmc <- function(object, term, fname, height=500, width=625, return_iFram
 
     <script>'
 
-  b <- paste0('
+    b <- paste0(
+      '
   </script>
 
   <script>
-    var  h=', height, ';
-    var w =', width, ';
-    var margin = {top: h*.02, left: w*', lmexpand, ', bottom: h*', (0.1*(axfont/8)), ', right: w*.05},
+    var  h=',
+      height,
+      ';
+    var w =',
+      width,
+      ';
+    var margin = {top: h*.02, left: w*',
+      lmexpand,
+      ', bottom: h*',
+      (0.1 * (axfont / 8)),
+      ', right: w*.05},
       width = w - margin.left - margin.right,
       height = h - margin.top - margin.bottom;
 
@@ -987,26 +1337,42 @@ var highlight = function(d){
   d3.selectAll(".dot-selected")
   .transition()
   .duration(50)
-  .style("fill", "', colors[1], '")
-  .attr("r",', ptSize[1], ')
+  .style("fill", "',
+      colors[1],
+      '")
+  .attr("r",',
+      ptSize[1],
+      ')
 
   d3.selectAll(".line-selected")
   .transition()
   .duration(50)
-  .style("stroke", "', colors[1], '")
-  .attr("stroke-width",', lineSize[1], ')
+  .style("stroke", "',
+      colors[1],
+      '")
+  .attr("stroke-width",',
+      lineSize[1],
+      ')
 
   d3.selectAll(".dot-unselected")
   .transition()
   .duration(50)
-  .style("fill", "', colors[2], '")
-  .attr("r",', ptSize[2], ')
+  .style("fill", "',
+      colors[2],
+      '")
+  .attr("r",',
+      ptSize[2],
+      ')
 
   d3.selectAll(".line-unselected")
   .transition()
   .duration(50)
-  .style("stroke", "', colors[2], '")
-  .attr("stroke-width",', lineSize[2], ')
+  .style("stroke", "',
+      colors[2],
+      '")
+  .attr("stroke-width",',
+      lineSize[2],
+      ')
 }
 
 
@@ -1077,17 +1443,35 @@ d3.selectAll(".tick").style("font-size", "', axfont, 'px")
 </body>
 ')
 
-  cat(h, "\n", sep="", file=fname, append=FALSE)
+    cat(h,
+        "\n",
+        sep  =  "",
+        file  =  fname,
+        append  =  FALSE)
 
-  cat("var data = ", toJSON(g), ";\n", sep="",
-      file=fname, append=TRUE)
+    cat(
+      "var data = ",
+      toJSON(g),
+      ";\n",
+      sep  =  "",
+      file  =  fname,
+      append  =  TRUE
+    )
 
-  cat(b, sep="", file=fname, append=TRUE)
+    cat(b,
+        sep  =  "",
+        file  =  fname,
+        append  =  TRUE)
 
-  if(return_iFrame){
-    tags$iframe(src=fname, height=height*1.05, width=width*1.05, style="border: none")
+    if (return_iFrame) {
+      tags$iframe(
+        src  =  fname,
+        height  =  height  *  1.05,
+        width  =  width  *  1.05,
+        style  =  "border: none"
+      )
+    }
   }
-}
 
 
 #' Corporatism
