@@ -1,0 +1,171 @@
+
+    <meta charset="utf-8">
+    <head>
+    </head>
+    <body>
+    <script src="https://d3js.org/d3-selection.v1.min.js"></script>
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <script>
+var data = [{"x":53.875,"y":"BNK","xlow":44.8912,"xup":62.8588,"obs":2,"g1":1,"g2":0,"g3":1,"g4":1,"g5":1,"g6":1,"g7":1,"g8":1,"g9":1,"g10":1},{"x":25.99,"y":"FIN","xlow":20.505,"xup":31.475,"obs":4,"g1":1,"g2":1,"g3":1,"g4":0,"g5":1,"g6":1,"g7":1,"g8":0,"g9":0,"g10":0},{"x":22.9217,"y":"TRN","xlow":16.7467,"xup":29.0966,"obs":9,"g1":1,"g2":1,"g3":1,"g4":0,"g5":0,"g6":1,"g7":1,"g8":0,"g9":0,"g10":0},{"x":20.7568,"y":"WOD","xlow":14.6396,"xup":26.8739,"obs":10,"g1":1,"g2":1,"g3":1,"g4":0,"g5":0,"g6":1,"g7":0,"g8":0,"g9":0,"g10":0},{"x":19.321,"y":"MIN","xlow":14.6722,"xup":23.9697,"obs":8,"g1":1,"g2":1,"g3":0,"g4":0,"g5":0,"g6":1,"g7":0,"g8":0,"g9":0,"g10":0},{"x":13.7876,"y":"HLD","xlow":4.1676,"xup":23.4075,"obs":5,"g1":0,"g2":1,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":0,"g9":0,"g10":0},{"x":13.5295,"y":"MER","xlow":7.6888,"xup":19.3702,"obs":7,"g1":0,"g2":1,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":0,"g9":1,"g10":0},{"x":13.2795,"y":"MAN","xlow":8.7773,"xup":17.7817,"obs":6,"g1":0,"g2":1,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":1,"g10":1},{"x":11.938,"y":"AGR","xlow":7.9134,"xup":15.9625,"obs":1,"g1":0,"g2":1,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":1,"g10":1},{"x":7.3639,"y":"CON","xlow":-4.4872,"xup":19.215,"obs":3,"g1":0,"g2":1,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":0,"g9":1,"g10":1}];
+
+  </script>
+
+  <script>
+    var  h=500;
+    var w =500;
+    var margin = {top: h*.02, left: w*0.15, bottom: h*0.2, right: w*.05},
+      width = w - margin.left - margin.right,
+      height = h - margin.top - margin.bottom;
+
+    var rgY = [0];
+    var deltaY = height/(data.length-1);
+    var j;
+    for(j =1; j<data.length; j++){
+      rgY.push(j*deltaY);
+    }
+
+// append the svg object to the body of the page
+var svg = d3.select("body")
+  .append("svg")
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+  .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
+
+
+  var xValue = function(d){return d.x};
+  var yValue = function(d){return d.y};
+  var xlValue = function(d){return d.xlow};
+  var xuValue = function(d){return d.xup};
+
+
+  var yDom =[];
+  data.forEach(d => yDom.push(d.y));
+
+  var y = d3.scaleOrdinal()
+  .domain(yDom)
+  .range(rgY);
+
+  var x = d3.scaleLinear()
+  .domain([d3.min(data, xlValue), d3.max(data, xuValue)])
+  .range([0, width]);
+
+
+  var xMap = function(d){return x(xValue(d))}
+  var xlMap = function(d){return x(xlValue(d))}
+  var xuMap = function(d){return x(xuValue(d))}
+  var yMap = function(d){return y(yValue(d))}
+
+
+var highlight = function(d){
+  var sel = d.obs;
+  var gvar = `g${sel}`;
+  var i;
+  for(i = 0; i < data.length; i++){
+    if(data[i][gvar] === 1){
+      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.add("dot-selected");
+      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.remove("dot-unselected");
+      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.add("line-selected");
+      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.remove("line-unselected");
+    }else{
+      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.remove("dot-selected");
+      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.add("dot-unselected");
+      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.remove("line-selected");
+      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.add("line-unselected");
+    }
+  }
+
+  d3.selectAll(".dot-selected")
+  .transition()
+  .duration(50)
+  .style("fill", "purple")
+  .attr("r",3.5)
+
+  d3.selectAll(".line-selected")
+  .transition()
+  .duration(50)
+  .style("stroke", "purple")
+  .attr("stroke-width",2)
+
+  d3.selectAll(".dot-unselected")
+  .transition()
+  .duration(50)
+  .style("fill", "lightgray")
+  .attr("r",2)
+
+  d3.selectAll(".line-unselected")
+  .transition()
+  .duration(50)
+  .style("stroke", "lightgray")
+  .attr("stroke-width",1)
+}
+
+
+
+
+// Highlight the specie that is hovered
+var doNotHighlight = function(){
+  d3.selectAll(".dot")
+  .transition()
+  .duration(200)
+  .style("fill", "black")
+  .attr("r",2)
+
+  d3.selectAll(".line")
+  .transition()
+  .duration(200)
+  .style("stroke", "black")
+  .attr("stroke-width",1)
+
+}
+
+svg.append("g")
+.attr("transform", "translate(0," + height*1.025 + ")")
+.call(d3.axisBottom(x).tickSizeOuter(0));
+
+svg
+.append("g")
+.attr("transform", `translate(${-width*.035},0)`)
+.call(d3.axisLeft(y));
+
+svg.append("text")
+.attr("y", 0 - margin.bottom)
+.attr("y2",0 - width/2)
+.attr("dy", "1em")
+.style("text-anchor", "middle")
+.style("font-size","20px")
+.text("Effect of Sector")
+.style("font-family", "sans-serif");
+
+var m;
+for(m=0; m<data.length; m++){
+  svg
+  .append("line")
+  .attr("class", "line")
+  .attr("x1", xlMap(data[m]))
+  .attr("y1", yMap(data[m]))
+  .attr("x2", xuMap(data[m]))
+  .attr("y2", yMap(data[m]))
+  .attr("stroke", "black")
+  .attr("stroke-width",1)
+}
+
+svg
+.selectAll(".dot")
+.data(data)
+.enter()
+.append("circle")
+.attr("class", "dot")
+.attr("r",2)
+.attr("cx", xMap)
+.attr("cy", yMap)
+.on("mouseover", highlight)
+.on("mouseleave", doNotHighlight )
+
+d3.selectAll(".tick").style("font-size", "16px")
+
+</script>
+</body>

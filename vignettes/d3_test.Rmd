@@ -1,0 +1,166 @@
+---
+title: "Using the sigd3 and sigd3h Functions"
+author: "Dave Armstrong"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using the sigd3 and sigd3h Functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, results='hide', include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning=FALSE)
+library(htmltools)
+```
+
+The `sigd3` and `sigd3h` functions in the `{daviz}` package implement a novel type of D3 graphic that highlights points that are significantly/reliably different than the point being hovered over.  A few different use cases are presented below. 
+
+# Coefficient plot
+
+We could imagine making coefficient plots in a couple of different ways.  
+
+## Model object input
+
+One use for this would be a coefficient plot from any object that has  `coef()` and `vcov()` extractor functions and works with the `{factorplot}` package.  Here we use the `Angell` data from the `{carData}` package to estimate a model of `moral` on `region`.  We then use the `sigd3()` function to  produce the plot.  
+
+```{r}
+library(daviz)
+data("Angell", package="carData")
+mod <- lm(moral ~  region, data=Angell)
+sigd3(mod, "region", fname="angell1.html", width=750, ylab = "Effect of Region")
+```
+
+We have control over lots of the aspects of the plot, including the colors.  Below, we have defined different colors for the plot using the `Ornestein` data from the `{carData}` pacakge.  
+
+```{r}
+data("Ornstein", package="carData")
+omod <- lm(interlocks ~  nation + sector , data=Ornstein)
+sigd3(omod, "sector", fname="orn.html", width=900, 
+      ylab = "Effect of Sector", axfont=16, labfont=20, 
+      colors=c("purple", "lightgray", "black"))
+```
+
+## Bayesian MCMC input
+
+If we either had an `mcmc` object or we had sampled from the posterior distribution treating the parameters of a frequentist model as posterior means and variances given flat priors (as below), we could make similar plot. 
+
+```{r}
+X <- model.matrix(mod, 
+                  data=data.frame(moral=0, 
+                                  region = factor(1:4, labels=levels(Angell$region))))
+
+b <- MASS::mvrnorm(1000, coef(mod), vcov(mod))
+yhat <- t(X %*% t(b))
+colnames(yhat) <- levels(Angell$region)
+class(yhat) <- "mcmc"
+sigd3(yhat, "region", fname="angell2.html", width=750, ylab = "Effect of Region")
+
+```
+
+
+# Horizontal orientation
+
+Some model objects will not be amenable to vertical line output.  Either the names might be too long or there may be too many parameters to plot the lines vertically in an aesthetically pleasing fashion.  Thus, the `sigd3h()` function makes a similar plot, but with horizontal orientation of the lines.  Here's the same example using the `Ornstein` data as above, but using the horizontal orientation. 
+
+## Model object as input
+
+```{r}
+sigd3h(omod, "sector", fname="orn2.html", height=500, width=500, 
+      ylab = "Effect of Sector", axfont=16, labfont=20, 
+      colors=c("purple", "lightgray", "black"), 
+      ptSize=c(3.5,2), lineSize=c(2,1))
+```
+
+## MCMC output as input
+
+Below, we estimate a model with data from Alvarez, Garrett and Lange's (1991) "Government Partisanship, Labor Organization and Macroeconomic Performance." article in the *American Political Science Review*.  We first estimate the model 
+
+
+
+```{r, echo=TRUE, results='hide'}
+jags.mod <- "
+model {
+	## macro (2nd level) model
+	for (i in 1:16) {             ## loop over countries
+		for (k in 1:6) {            ## loop over parameters
+			eb[i,k] <- g[k,1] + labor.org[i]*g[k,2];
+			b[i,k] ~ dnorm( eb[i,k], p[k] );  
+			## n.b., each 'random coefficient' b[i,k] sampled independently
+		}
+	}
+	
+  ## micro model
+	for (i in 1:224) {       ## loop over time within countries
+		ey[i] <-  b[country[i],1]         ## double-subscript selects which 
+	      + (imports[i]-mean(imports[]))*b[country[i],5]  ## unit-specific 
+        + (exports[i]-mean(exports[]))*b[country[i],4]  
+        + (demand[i]-mean(demand[]))*b[country[i],3]
+        + growth.lag[i]*b[country[i],2]
+        + (left[i]-mean(left[]))*b[country[i],6];
+		y[i] ~ dnorm( ey[i], tau[country[i]] );  ## likelihood
+	}
+	
+	for (k in 1:6){                 ## loop, convert precisions to 
+	   sigma.b[k] <- sqrt(1/p[k]);  ## covariate-specific std err
+	}
+	
+  ## priors
+	for (i in 1:16) {                              
+		tau[i] ~ dgamma(1.0E-3,1.0E-3);    ## country-specific precisions
+		sigma[i] <- sqrt(1/tau[i]);        ## country-specific resid std err
+	}
+	for (k in 1:6) {
+		p[k] ~  dgamma(1.0E-3,1.0E-3);     ## covariate-specific precisions 
+		g[k,1:2] ~ dmnorm(g0[1:2],G0[1:2,1:2]); ## MVN prior, 2nd level parms
+	}	
+		
+	
+	g0[1] <- 0.0; g0[2] <- 0.0;     ## prior means, 2nd level 
+	G0[1,1] <- .001; G0[1,2] <- 0;  ## prior precisions, 2nd level
+	G0[2,1] <- 0; G0[2,2] <- .001;
+	
+}
+"
+
+data(corp)
+
+library(runjags)
+jags <- run.jags(model = jags.mod, data=corp, monitor=c("b", "g", "ey"), adapt=2500, burnin=10000, sample=5000)
+
+chains <- combine.mcmc(jags$mcmc)
+class(chains) <- "mcmc"
+```
+
+After running the model, we can then plot the random coefficients for demand. 
+
+
+```{r}
+countries <- c("AUL", "AUS", "BEL", "CAN", "DEN", "FIN", "FRA", "GER", "IRE", "ITA", "JAP", "NET", "NOR", "SWE", "UK",  "USA")
+ints <- chains[,grep("^b\\[.*3\\]$", colnames(chains))]
+colnames(ints) <- countries
+sigd3h(ints, NULL, "corp1.html", height=600, width=500, ylab="Random Coefficients for Demand")
+```
+
+
+To see the real benefits of the horizontal orientation, we could plot all of the predicted values (224 of them).  
+
+
+```{r}
+countries <- c("AUL", "AUS", "BEL", "CAN", "DEN", "FIN", "FRA", "GER", "IRE", "ITA", "JAP", "NET", "NOR", "SWE", "UK",  "USA")
+cn <- paste(countries[corp$country], rep(1971:1984, 16), sep="-")
+
+preds <- chains[,grep("^ey", colnames(chains))]
+colnames(preds) <- cn
+class(preds) <- "mcmc"
+sigd3h(preds, NULL, "corp2.html", height=2000, width=500, ylab="Predicted Growth", 
+       ptSize=c(4.5, 2.5), lineSize=c(3.5, 2), axfont=9)
+
+```
+
+
+
+
+
+
+
