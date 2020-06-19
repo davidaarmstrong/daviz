@@ -1,0 +1,30 @@
+---
+title: "Testing Playground"
+output: html_document
+---
+
+> RMarkdown Notebook for testing various visualizations before deployment
+
+## Simple Barchart
+Sends data to the script at `./simple-barchart.js`
+```{r}
+library(r2d3)
+r2d3(data=c(0.3, 0.6, 0.8, 0.95, 0.40, 0.20), script = "simple-barchart.js")
+```
+
+## Barchart
+Data initialization
+```{r setup}
+bars <- c(0.3, 0.6, 0.8, 0.95, 0.40, 0.20)
+```
+
+Inline script
+```{d3 data=bars, options=list(color = 'orange')}
+svg.selectAll('rect')
+  .data(data)
+  .enter().append('rect')
+      .attr('width', function(d) { return d * 400; })
+      .attr('height', '58px')
+      .attr('y', function(d, i) { return i * 60; })
+      .attr('fill', options.color);
+```
