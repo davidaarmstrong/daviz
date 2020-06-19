@@ -1,3 +1,8 @@
+# Miscellaneous Data Visualization Functions ![project version](https://img.shields.io/badge/Version-0.0.1-yellow.svg)
+> Various functions for making data visualizations.
+
+## Description:
+```
 Package: daviz
 Title: Miscellaneous Data Visualization Functions
 Version: 0.0.1
@@ -15,3 +20,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
 Depends: 
     R (>= 2.10)
+```
+
+## License: 
+This project is licensed under the [MIT License](./LICENSE.md) and [LICENSE](./LICENSE).
