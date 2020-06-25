@@ -810,8 +810,6 @@ sigd3.mcmc <-
 ##'
 ##' @return Either an html file or an iframe linked to the html file.
 ##' @export
-
-
 sigd3h <-
   function(object,
            term,

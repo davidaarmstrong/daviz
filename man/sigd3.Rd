@@ -19,7 +19,7 @@ sigd3(
   axfont = 12,
   labfont = 12,
   labfam = c("sans-serif", "serif"),
-  colors = c("red", "black", "black"),
+  colors = c("#B80000", "#000000", "#000000"),
   ptSize = c(7, 5),
   lineSize = c(3, 1.5),
   names = NULL,
