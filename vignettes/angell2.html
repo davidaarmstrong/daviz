@@ -12,12 +12,12 @@
 </head>
 <body>
   <script>
-let data = [{"x":"E","y":15.3667,"ylow":13.9153,"yup":16.818,"obs":1,"g1":0,"g2":1,"g3":1,"g4":1},{"x":"MW","y":12.2786,"ylow":11.1149,"yup":13.4422,"obs":2,"g1":1,"g2":0,"g3":1,"g4":0},{"x":"W","y":10.5167,"ylow":8.7391,"yup":12.2942,"obs":4,"g1":1,"g2":0,"g3":1,"g4":0},{"x":"S","y":7.7357,"ylow":6.5721,"yup":8.8994,"obs":3,"g1":1,"g2":1,"g3":0,"g4":1}];
+    let data = [{"x":"E","y":15.3219,"ylow":13.8273,"yup":16.6948,"obs":1,"g1":0,"g2":1,"g3":1,"g4":1,"_row":"E"},{"x":"MW","y":12.2883,"ylow":11.152,"yup":13.4124,"obs":2,"g1":1,"g2":0,"g3":1,"g4":0,"_row":"MW"},{"x":"W","y":10.5571,"ylow":8.7192,"yup":12.4918,"obs":4,"g1":1,"g2":0,"g3":1,"g4":0,"_row":"W"},{"x":"S","y":7.7499,"ylow":6.648,"yup":8.8631,"obs":3,"g1":1,"g2":1,"g3":0,"g4":1,"_row":"S"}];
   </script>
 
   <script>
     // Variables
-    let height = 500, width = 750,
+    let height = 500, width = 700,
       margin = {top: height * .02, right: width * .15, bottom: height * 0.15, left: width * .1},
       adjustedWidth = width - margin.left - margin.right,
       adjustedHeight = height - margin.top - margin.bottom,
@@ -67,35 +67,35 @@ let data = [{"x":"E","y":15.3667,"ylow":13.9153,"yup":16.818,"obs":1,"g1":0,"g2"
 
     // Mouseover highlight function
     const highlight = ((d) => {
-      for (let i = 0; i < data.length; i++) {
-        if (data[i][`g${d.obs}`] === 1) {
+      for(let i = 0; i < data.length; i++) {
+        if(data[i][`g${d.obs}`] === 1) {
           d3.selectAll(`circle[cx="${xMap(data[i])}"]`)
-            .transition()
-            .duration(50)
-            .style("fill", colors[0])
-            .attr("r", pointSize[0])
+           .transition()
+           .duration(50)
+           .style("fill", colors[0])
+           .attr("r", pointSize[0])
           d3.select(`line[x1="${xMap(data[i])}"]`)
-            .transition()
-            .duration(50)
-            .style("stroke", colors[0])
-            .attr("stroke-width", lineSize[0])
+           .transition()
+           .duration(50)
+           .style("stroke", colors[0])
+           .attr("stroke-width", lineSize[0])
         }
       }
-    });
+    })
 
     // Mouseleave highlight function
-    const doNotHighlight = function () {
+    const doNotHighlight = () => {
       d3.selectAll(".dot")
         .transition()
         .duration(200)
         .style("fill", colors[2])
-        .attr("r", pointSize[1])
+        .attr("r",pointSize[1])
 
       d3.selectAll(".line")
         .transition()
         .duration(200)
         .style("stroke", colors[2])
-        .attr("stroke-width", lineSize[1])
+        .attr("stroke-width",lineSize[1])
     }
 
     // Vertical label
@@ -110,7 +110,7 @@ let data = [{"x":"E","y":15.3667,"ylow":13.9153,"yup":16.818,"obs":1,"g1":0,"g2"
       .style("font-family", labelFontFamily);
 
     // Graph dot lines
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < data.length; i++){
       svg.append("line")
         .attr("class", "line")
         .attr("x1", xMap(data[i]))
@@ -127,11 +127,11 @@ let data = [{"x":"E","y":15.3667,"ylow":13.9153,"yup":16.818,"obs":1,"g1":0,"g2"
       .enter()
       .append("circle")
         .attr("class", "dot")
-        .attr("r", pointSize[1])
+        .attr("r",5)
         .attr("cx", xMap)
         .attr("cy", yMap)
       .on("mouseover", highlight)
-      .on("mouseleave", doNotHighlight)
+      .on("mouseleave", doNotHighlight )
   </script>
 </body>
 </html>
