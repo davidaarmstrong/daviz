@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
 
-  <title>sigd3.default</title>
+  <title>Angell dataset - sigd3.mcmc plot</title>
   <script src="https://d3js.org/d3-selection.v1.min.js"></script>
   <script src="https://d3js.org/d3.v4.js"></script>
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -18,7 +18,7 @@
   <script>
     // Variables
     let height = 500, width = 700,
-      margin = {top: height * .02, right: width * .15, bottom: height * 0.15, left: width * .1},
+      margin = {top: height * 0.02, right: width * 0.15, bottom: height * 0.15, left: width * 0.1},
       adjustedWidth = width - margin.left - margin.right,
       adjustedHeight = height - margin.top - margin.bottom,
       colors = ["#B80000", "#000000", "#000000"],
@@ -35,14 +35,14 @@
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // Mapping functions
-    const xMap = (d) => x(d.x);
-    const yMap = (d) => y(d.y);
-    const ylMap = (d) => y(d.ylow);
-    const yuMap = (d) => y(d.yup);
+    const xMap = (el) => x(el.x);
+    const yMap = (el) => y(el.y);
+    const ylMap = (el) => y(el.ylow);
+    const yuMap = (el) => y(el.yup);
 
     // Axes initialization
     let rgX = [0];
-    let deltaX = adjustedWidth / (data.length - 1)
+    const deltaX = adjustedWidth / (data.length - 1)
     for (let i = 1; i < data.length; i++) {
       rgX.push(i * deltaX);
     }
@@ -52,7 +52,7 @@
       .range(rgX);
 
     const y = d3.scaleLinear()
-      .domain([d3.min(data, (d) => d.ylow), d3.max(data, (d) => d.yup)])
+      .domain([d3.min(data, (el) => el.ylow), d3.max(data, (el) => el.yup)])
       .range([adjustedHeight, 0]);
 
     svg.append("g")
@@ -60,28 +60,41 @@
       .call(d3.axisBottom(x));
 
     svg.append("g")
-      .attr("transform", `translate(${-adjustedWidth * .035},0)`)
+      .attr("transform", `translate(${-adjustedWidth * 0.035},0)`)
       .call(d3.axisLeft(y));
 
     d3.selectAll(".tick").style("font-size", `${axesFont}px`)
 
     // Mouseover highlight function
-    const highlight = ((d) => {
+    const highlight = (d) => {
       for(let i = 0; i < data.length; i++) {
-        if(data[i][`g${d.obs}`] === 1) {
+        if (data[i][`g${d.obs}`] === 1) {
           d3.selectAll(`circle[cx="${xMap(data[i])}"]`)
            .transition()
            .duration(50)
            .style("fill", colors[0])
            .attr("r", pointSize[0])
+
           d3.select(`line[x1="${xMap(data[i])}"]`)
            .transition()
            .duration(50)
            .style("stroke", colors[0])
            .attr("stroke-width", lineSize[0])
+        } else {
+          d3.selectAll(`circle[cx="${xMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("fill", colors[1])
+           .attr("r", pointSize[1])
+
+          d3.select(`line[x1="${xMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("stroke", colors[1])
+           .attr("stroke-width", lineSize[1])
         }
       }
-    })
+    }
 
     // Mouseleave highlight function
     const doNotHighlight = () => {
@@ -127,7 +140,7 @@
       .enter()
       .append("circle")
         .attr("class", "dot")
-        .attr("r",5)
+        .attr("r", pointSize[1])
         .attr("cx", xMap)
         .attr("cy", yMap)
       .on("mouseover", highlight)

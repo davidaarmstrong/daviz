@@ -130,7 +130,7 @@ sigd3.default <-
 <head>
   <meta charset="utf-8">
 
-  <title>sigd3.default</title>
+  <title>sigd3.default plot</title>
   <script src="https://d3js.org/d3-selection.v1.min.js"></script>
   <script src="https://d3js.org/d3.v4.js"></script>
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -144,7 +144,7 @@ sigd3.default <-
     b <- paste0('  </script>
   <script>
     let height = ',height,', width = ',width,',
-      margin = {top: height * .02, right: width * .15, bottom: height * 0.15, left: width * .1},
+      margin = {top: height * 0.02, right: width * 0.15, bottom: height * 0.15, left: width * 0.1},
       adjustedWidth = width - margin.left - margin.right,
       adjustedHeight = height - margin.top - margin.bottom,
       colors = ["',colors[1],'", "',colors[2],'", "',colors[3],'"],
@@ -155,22 +155,22 @@ sigd3.default <-
     // Append svg to the body
     let svg = d3.select("body")
       .append("svg")
-      .attr("width", adjustedWidth + margin.left + margin.right)
-      .attr("height", adjustedHeight + margin.top + margin.bottom)
+        .attr("width", adjustedWidth + margin.left + margin.right)
+        .attr("height", adjustedHeight + margin.top + margin.bottom)
       .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // Various mapping functions
-    const xMap = (d) => x(d.x);
-    const yMap = (d) => y(d.y);
-    const ylMap = (d) => y(d.ylow);
-    const yuMap = (d) => y(d.yup);
+    // Mapping functions
+    const xMap = (el) => x(el.x);
+    const yMap = (el) => y(el.y);
+    const ylMap = (el) => y(el.ylow);
+    const yuMap = (el) => y(el.yup);
 
     // Axes initialization
     let rgX = [0];
     let deltaX = adjustedWidth / (data.length - 1)
-    for (let j = 1; j < data.length; j++) {
-      rgX.push(j * deltaX);
+    for (let i = 1; i < data.length; i++) {
+      rgX.push(i * deltaX);
     }
 
     const x = d3.scaleOrdinal()
@@ -178,7 +178,7 @@ sigd3.default <-
       .range(rgX);
 
     const y = d3.scaleLinear()
-      .domain([d3.min(data, (d) => d.ylow), d3.max(data, (d) => d.yup)])
+      .domain([d3.min(data, (el) => el.ylow), d3.max(data, (el) => el.yup)])
       .range([adjustedHeight, 0]);
 
     svg.append("g")
@@ -186,42 +186,54 @@ sigd3.default <-
       .call(d3.axisBottom(x));
 
     svg.append("g")
-      .attr("transform", `translate(${-adjustedWidth * .035},0)`)
+      .attr("transform", `translate(${-adjustedWidth * 0.035},0)`)
       .call(d3.axisLeft(y));
 
     d3.selectAll(".tick").style("font-size", `${axesFont}px`)
 
     // Mouseover highlight function
-    const highlight = ((d) => {
+    const highlight = (d) => {
       for (let i = 0; i < data.length; i++) {
         if (data[i][`g${d.obs}`] === 1) {
           d3.selectAll(`circle[cx="${xMap(data[i])}"]`)
-            .transition()
-            .duration(50)
-            .style("fill", colors[0])
-            .attr("r", pointSize[0])
+           .transition()
+           .duration(50)
+           .style("fill", colors[0])
+           .attr("r", pointSize[0])
           d3.select(`line[x1="${xMap(data[i])}"]`)
-            .transition()
-            .duration(50)
-            .style("stroke", colors[0])
-            .attr("stroke-width", lineSize[0])
+           .transition()
+           .duration(50)
+           .style("stroke", colors[0])
+           .attr("stroke-width", lineSize[0])
+        } else {
+          d3.selectAll(`circle[cx="${xMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("fill", colors[1])
+           .attr("r", pointSize[1])
+
+          d3.select(`line[x1="${xMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("stroke", colors[1])
+           .attr("stroke-width", lineSize[1])
         }
       }
-    });
+    }
 
     // Mouseleave highlight function
-    const doNotHighlight = function () {
+    const doNotHighlight = () => {
       d3.selectAll(".dot")
-        .transition()
-        .duration(200)
-        .style("fill", colors[2])
-        .attr("r", pointSize[1])
+       .transition()
+       .duration(200)
+       .style("fill", colors[2])
+       .attr("r", pointSize[1])
 
       d3.selectAll(".line")
-        .transition()
-        .duration(200)
-        .style("stroke", colors[2])
-        .attr("stroke-width", lineSize[1])
+       .transition()
+       .duration(200)
+       .style("stroke", colors[2])
+       .attr("stroke-width", lineSize[1])
     }
 
     // Vertical label
@@ -236,13 +248,13 @@ sigd3.default <-
       .style("font-family", labelFontFamily);
 
     // Graph dot lines
-    for (let m = 0; m < data.length; m++) {
+    for (let i = 0; i < data.length; i++) {
       svg.append("line")
         .attr("class", "line")
-        .attr("x1", xMap(data[m]))
-        .attr("y1", ylMap(data[m]))
-        .attr("x2", xMap(data[m]))
-        .attr("y2", yuMap(data[m]))
+        .attr("x1", xMap(data[i]))
+        .attr("y1", ylMap(data[i]))
+        .attr("x2", xMap(data[i]))
+        .attr("y2", yuMap(data[i]))
         .attr("stroke", colors[2])
         .attr("stroke-width", lineSize[1])
     }
@@ -252,24 +264,24 @@ sigd3.default <-
       .data(data)
       .enter()
       .append("circle")
-      .attr("class", "dot")
-      .attr("r", pointSize[1])
-      .attr("cx", xMap)
-      .attr("cy", yMap)
+        .attr("class", "dot")
+        .attr("r", pointSize[1])
+        .attr("cx", xMap)
+        .attr("cy", yMap)
       .on("mouseover", highlight)
       .on("mouseleave", doNotHighlight)
-
   </script>
 </body>
-</html>')
+</html>
+')
 
     cat(h, "\n", sep = "", file = fname, append = FALSE)
-    cat("let data = ", toJSON(g), ";\n", sep = "", file = fname, append = TRUE)
+    cat("    let data = ", toJSON(g), ";\n", sep = "", file = fname, append = TRUE)
     cat(b, sep = "", file = fname, append = TRUE)
 
     tags$iframe(src = fname, height = height * 1.05, width = width * 1.05, style = "border: none")
 
-    r2d3(data=g, options = list(axfont = 12, colors = c("#B80000", "#000000", "#000000"), ptSize = c(7,5), lineSize = c(3,1.5), labfont = 12, ylab = "Effect of Region", labfam = c("sans-serif", "serif")), script = "sigd3.js", height="500", width="750")
+    r2d3(data=g, options = list(axfont = 12, colors = c("#B80000", "#000000", "#000000"), ptSize = c(7,5), lineSize = c(3,1.5), labfont = 12, ylab = "Effect of Region", labfam = c("sans-serif", "serif")), script = "sigd3_default_mcmc.js", height="500", width="750")
   }
 
 
@@ -388,7 +400,7 @@ sigd3.mcmc <-
 <head>
   <meta charset="utf-8">
 
-  <title>sigd3.default</title>
+  <title>sigd3.mcmc plot</title>
   <script src="https://d3js.org/d3-selection.v1.min.js"></script>
   <script src="https://d3js.org/d3.v4.js"></script>
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -401,7 +413,7 @@ sigd3.mcmc <-
     b <- paste0('  </script>
   <script>
     let height = ',height,', width = ',width,',
-      margin = {top: height * .02, right: width * .15, bottom: height * 0.15, left: width * .1},
+      margin = {top: height * 0.02, right: width * 0.15, bottom: height * 0.15, left: width * 0.1},
       adjustedWidth = width - margin.left - margin.right,
       adjustedHeight = height - margin.top - margin.bottom,
       colors = ["',colors[1],'", "',colors[2],'", "',colors[3],'"],
@@ -412,22 +424,22 @@ sigd3.mcmc <-
     // Append svg to the body
     let svg = d3.select("body")
       .append("svg")
-      .attr("width", adjustedWidth + margin.left + margin.right)
-      .attr("height", adjustedHeight + margin.top + margin.bottom)
+        .attr("width", adjustedWidth + margin.left + margin.right)
+        .attr("height", adjustedHeight + margin.top + margin.bottom)
       .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // Various mapping functions
-    const xMap = (d) => x(d.x);
-    const yMap = (d) => y(d.y);
-    const ylMap = (d) => y(d.ylow);
-    const yuMap = (d) => y(d.yup);
+    // Mapping functions
+    const xMap = (el) => x(el.x);
+    const yMap = (el) => y(el.y);
+    const ylMap = (el) => y(el.ylow);
+    const yuMap = (el) => y(el.yup);
 
     // Axes initialization
     let rgX = [0];
-    let deltaX = adjustedWidth / (data.length - 1)
-    for (let j = 1; j < data.length; j++) {
-      rgX.push(j * deltaX);
+    const deltaX = adjustedWidth / (data.length - 1)
+    for (let i = 1; i < data.length; i++) {
+      rgX.push(i * deltaX);
     }
 
     const x = d3.scaleOrdinal()
@@ -435,7 +447,7 @@ sigd3.mcmc <-
       .range(rgX);
 
     const y = d3.scaleLinear()
-      .domain([d3.min(data, (d) => d.ylow), d3.max(data, (d) => d.yup)])
+      .domain([d3.min(data, (el) => el.ylow), d3.max(data, (el) => el.yup)])
       .range([adjustedHeight, 0]);
 
     svg.append("g")
@@ -443,42 +455,55 @@ sigd3.mcmc <-
       .call(d3.axisBottom(x));
 
     svg.append("g")
-      .attr("transform", `translate(${-adjustedWidth * .035},0)`)
+      .attr("transform", `translate(${-adjustedWidth * 0.035},0)`)
       .call(d3.axisLeft(y));
 
     d3.selectAll(".tick").style("font-size", `${axesFont}px`)
 
     // Mouseover highlight function
-    const highlight = ((d) => {
-      for (let i = 0; i < data.length; i++) {
+    const highlight = (d) => {
+      for(let i = 0; i < data.length; i++) {
         if (data[i][`g${d.obs}`] === 1) {
           d3.selectAll(`circle[cx="${xMap(data[i])}"]`)
-            .transition()
-            .duration(50)
-            .style("fill", colors[0])
-            .attr("r", pointSize[0])
+           .transition()
+           .duration(50)
+           .style("fill", colors[0])
+           .attr("r", pointSize[0])
+
           d3.select(`line[x1="${xMap(data[i])}"]`)
-            .transition()
-            .duration(50)
-            .style("stroke", colors[0])
-            .attr("stroke-width", lineSize[0])
+           .transition()
+           .duration(50)
+           .style("stroke", colors[0])
+           .attr("stroke-width", lineSize[0])
+        } else {
+          d3.selectAll(`circle[cx="${xMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("fill", colors[1])
+           .attr("r", pointSize[1])
+
+          d3.select(`line[x1="${xMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("stroke", colors[1])
+           .attr("stroke-width", lineSize[1])
         }
       }
-    });
+    }
 
     // Mouseleave highlight function
-    const doNotHighlight = function () {
+    const doNotHighlight = () => {
       d3.selectAll(".dot")
         .transition()
         .duration(200)
         .style("fill", colors[2])
-        .attr("r", pointSize[1])
+        .attr("r",pointSize[1])
 
       d3.selectAll(".line")
         .transition()
         .duration(200)
         .style("stroke", colors[2])
-        .attr("stroke-width", lineSize[1])
+        .attr("stroke-width",lineSize[1])
     }
 
     // Vertical label
@@ -493,13 +518,13 @@ sigd3.mcmc <-
       .style("font-family", labelFontFamily);
 
     // Graph dot lines
-    for (let m = 0; m < data.length; m++) {
+    for (let i = 0; i < data.length; i++){
       svg.append("line")
         .attr("class", "line")
-        .attr("x1", xMap(data[m]))
-        .attr("y1", ylMap(data[m]))
-        .attr("x2", xMap(data[m]))
-        .attr("y2", yuMap(data[m]))
+        .attr("x1", xMap(data[i]))
+        .attr("y1", ylMap(data[i]))
+        .attr("x2", xMap(data[i]))
+        .attr("y2", yuMap(data[i]))
         .attr("stroke", colors[2])
         .attr("stroke-width", lineSize[1])
     }
@@ -509,26 +534,27 @@ sigd3.mcmc <-
       .data(data)
       .enter()
       .append("circle")
-      .attr("class", "dot")
-      .attr("r", pointSize[1])
-      .attr("cx", xMap)
-      .attr("cy", yMap)
+        .attr("class", "dot")
+        .attr("r", pointSize[1])
+        .attr("cx", xMap)
+        .attr("cy", yMap)
       .on("mouseover", highlight)
-      .on("mouseleave", doNotHighlight)
-
+      .on("mouseleave", doNotHighlight )
   </script>
 </body>
-</html>'
-    )
+</html>
+   ')
 
     cat(h, "\n", sep = "", file = fname, append = FALSE)
-    cat("var data = ", toJSON(g), ";\n", sep = "", file = fname, append = TRUE)
+    cat("    let data = ", toJSON(g), ";\n", sep = "", file = fname, append = TRUE)
     cat(b, sep = "", file = fname, append = TRUE)
 
     tags$iframe(src = fname, height = height * 1.05, width = width * 1.05, style = "border: none")
 
-    r2d3(data=g, options = list(axfont = 12, colors = c("#B80000", "#000000", "#000000"), ptSize = c(7,5), lineSize = c(3,1.5), labfont = 12, ylab = "Effect of Region", labfam = c("sans-serif", "serif")), script = "sigd3.js", height="500", width="750")
+    r2d3(data=g, options = list(axfont = 12, colors = c("#B80000", "#000000", "#000000"), ptSize = c(7,5), lineSize = c(3,1.5), labfont = 12, ylab = "Effect of Region", labfam = c("sans-serif", "serif")), script = "sigd3_default_mcmc.js", height="500", width="750")
   }
+
+
 
 ##' Significance Plot with D3 (horizontal)
 ##'
@@ -805,6 +831,7 @@ var doNotHighlight = function(){
   .attr("r",', ptSize[2], ')
 
   d3.selectAll(".line")
+
   .transition()
   .duration(200)
   .style("stroke", "', colors[3], '")
