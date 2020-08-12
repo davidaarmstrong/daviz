@@ -267,7 +267,9 @@ sigd3.default <-
     cat("let data = ", toJSON(g), ";\n", sep = "", file = fname, append = TRUE)
     cat(b, sep = "", file = fname, append = TRUE)
 
-    tags$iframe(src = fname, height = height * 1.05, width = width * 1.05, style = "border: none")
+    if (return_iFrame) {
+      tags$iframe(src = fname, height = height * 1.05, width = width * 1.05, style = "border: none")
+    }
 
     r2d3(data=g, options = list(axfont = 12, colors = c("#B80000", "#000000", "#000000"), ptSize = c(7,5), lineSize = c(3,1.5), labfont = 12, ylab = "Effect of Region", labfam = c("sans-serif", "serif")), script = "sigd3.js", height="500", width="750")
   }
@@ -525,7 +527,9 @@ sigd3.mcmc <-
     cat("var data = ", toJSON(g), ";\n", sep = "", file = fname, append = TRUE)
     cat(b, sep = "", file = fname, append = TRUE)
 
-    tags$iframe(src = fname, height = height * 1.05, width = width * 1.05, style = "border: none")
+    if (return_iFrame) {
+      tags$iframe(src = fname, height = height * 1.05, width = width * 1.05, style = "border: none")
+    }
 
     r2d3(data=g, options = list(axfont = 12, colors = c("#B80000", "#000000", "#000000"), ptSize = c(7,5), lineSize = c(3,1.5), labfont = 12, ylab = "Effect of Region", labfam = c("sans-serif", "serif")), script = "sigd3.js", height="500", width="750")
   }
@@ -967,13 +971,7 @@ sigd3h.mcmc <-
         colnames(object) = names
       } else{
         stop(
-          paste0(
-            "names vector (length ",
-            length(names),
-            " has to be the same as the number of parameters (length, ",
-            ncol(object),
-            ").\n"
-          )
+          paste0("mismatch between vector length names: (", length(names), ") and object: (", ncol(object), ").\n")
         )
       }
 
@@ -1004,239 +1002,172 @@ sigd3h.mcmc <-
     g <- g %>% bind_cols(mat)
     if (order == "size-ascending") {
       g <- g %>% arrange(.data$x)
-    }
-    if (order == "size-descending") {
+    } else if (order == "size-descending") {
       g <- g %>% arrange(-.data$x)
     }
 
-    h <- '
-    <meta charset="utf-8">
-    <head>
-    </head>
-    <body>
-    <script src="https://d3js.org/d3-selection.v1.min.js"></script>
-    <script src="https://d3js.org/d3.v4.js"></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    h <- '<!doctype html>
 
-    <script>'
+<html lang="en">
+<head>
+  <meta charset="utf-8">
 
-    b <- paste0(
-      '
-  </script>
+  <title>sigd3h.default plot</title>
+  <script src="https://d3js.org/d3-selection.v1.min.js"></script>
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
+</head>
+<body>
+
+  <script>'
+
+    b <- paste0('  </script>
   <script>
-    var  h=',
-      height,
-      ';
-    var w =',
-      width,
-      ';
-    var margin = {top: h*.02, left: w*',
-      lmexpand,
-      ', bottom: h*',
-      (0.1 * (axfont / 8)),
-      ', right: w*.05},
-      width = w - margin.left - margin.right,
-      height = h - margin.top - margin.bottom;
+    // Variables
+    let height = ',height,', width = ',width,',
+      margin = {top: height * 0.02, right: width * 0.15, bottom: height * 0.2, left: width * 0.15},
+      adjustedWidth = width - margin.left - margin.right,
+      adjustedHeight = height - margin.top - margin.bottom,
+      colors = ["',colors[1],'", "',colors[2],'", "',colors[3],'"],
+      pointSize = [',ptSize[1],', ',ptSize[2],'], lineSize = [',lineSize[1],', ',lineSize[2],'],
+      labelFontFamily = "',labfam[1],'", xLabel = "',ylab,'",
+      labelFont = ',labfont,', axesFont = ',axfont,';
 
-    var rgY = [0];
-    var deltaY = height/(data.length-1);
-    var j;
-    for(j =1; j<data.length; j++){
-      rgY.push(j*deltaY);
+    // Append svg to the body
+    let svg = d3.select("body")
+      .append("svg")
+        .attr("width", adjustedWidth + margin.left + margin.right)
+        .attr("height", adjustedHeight + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Mapping functions
+    const xMap = (el) => x(el.x);
+    const xlMap = (el) => x(el.xlow);
+    const xuMap = (el) => x(el.xup);
+    const yMap = (el) => y(el.y);
+
+    // Axes initialization
+    let rgY = [0];
+    const deltaY = adjustedHeight/(data.length-1);
+    for(let i = 1; i < data.length; i++) {
+      rgY.push(i * deltaY);
     }
 
-// append the svg object to the body of the page
-var svg = d3.select("body")
-  .append("svg")
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-  .attr("transform",
-        "translate(" + margin.left + "," + margin.top + ")");
+    let y = d3.scaleOrdinal()
+      .domain(Array.from(data, el => el.y))
+      .range(rgY);
 
+    let x = d3.scaleLinear()
+      .domain([d3.min(data, (el) => el.xlow), d3.max(data, (el) => el.xup)])
+      .range([0, adjustedWidth]);
 
-  var xValue = function(d){return d.x};
-  var yValue = function(d){return d.y};
-  var xlValue = function(d){return d.xlow};
-  var xuValue = function(d){return d.xup};
+    svg.append("g")
+      .attr("transform", "translate(0," + adjustedHeight * 1.025 + ")")
+      .call(d3.axisBottom(x).tickSizeOuter(0));
 
+    svg.append("g")
+      .attr("transform", `translate(${-adjustedWidth * 0.035},0)`)
+      .call(d3.axisLeft(y));
 
-  var yDom =[];
-  data.forEach(d => yDom.push(d.y));
+    d3.selectAll(".tick").style("font-size", `${axesFont}px`)
 
-  var y = d3.scaleOrdinal()
-  .domain(yDom)
-  .range(rgY);
+    // Mouseover highlight function
+    const highlight = (d) => {
+      for (let i = 0; i < data.length; i++){
+        if (data[i][`g${d.obs}`] === 1){
+          d3.selectAll(`circle[cy="${yMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("fill", colors[0])
+           .attr("r", pointSize[0])
 
-  var x = d3.scaleLinear()
-  .domain([d3.min(data, xlValue), d3.max(data, xuValue)])
-  .range([0, width]);
+          d3.selectAll(`line[y1="${yMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("stroke", colors[0])
+           .attr("stroke-width", lineSize[0])
+        } else {
+          d3.selectAll(`circle[cy="${yMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("fill", colors[1])
+           .attr("r", pointSize[1])
 
-
-  var xMap = function(d){return x(xValue(d))}
-  var xlMap = function(d){return x(xlValue(d))}
-  var xuMap = function(d){return x(xuValue(d))}
-  var yMap = function(d){return y(yValue(d))}
-
-
-var highlight = function(d){
-  var sel = d.obs;
-  var gvar = `g${sel}`;
-  var i;
-  for(i = 0; i < data.length; i++){
-    if(data[i][gvar] === 1){
-      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.add("dot-selected");
-      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.remove("dot-unselected");
-      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.add("line-selected");
-      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.remove("line-unselected");
-    }else{
-      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.remove("dot-selected");
-      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.add("dot-unselected");
-      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.remove("line-selected");
-      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.add("line-unselected");
+          d3.selectAll(`line[y1="${yMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("stroke", colors[1])
+           .attr("stroke-width", lineSize[1])
+        }
+      }
     }
-  }
 
-  d3.selectAll(".dot-selected")
-  .transition()
-  .duration(50)
-  .style("fill", "',
-      colors[1],
-      '")
-  .attr("r",',
-      ptSize[1],
-      ')
+    // Mouseleave highlight function
+    const doNotHighlight = () => {
+      d3.selectAll(".dot")
+       .transition()
+       .duration(200)
+       .style("fill", colors[2])
+       .attr("r", pointSize[1])
 
-  d3.selectAll(".line-selected")
-  .transition()
-  .duration(50)
-  .style("stroke", "',
-      colors[1],
-      '")
-  .attr("stroke-width",',
-      lineSize[1],
-      ')
+      d3.selectAll(".line")
+       .transition()
+       .duration(200)
+       .style("stroke", colors[2])
+       .attr("stroke-width", lineSize[1])
+    }
 
-  d3.selectAll(".dot-unselected")
-  .transition()
-  .duration(50)
-  .style("fill", "',
-      colors[2],
-      '")
-  .attr("r",',
-      ptSize[2],
-      ')
+    // Horizontal label
+    svg.append("text")
+      .attr("y", adjustedHeight + margin.bottom*0.4)
+      .attr("x", adjustedWidth / 2)
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .style("font-size", `${labelFont}px`)
+      .text(xLabel)
+      .style("font-family", labelFontFamily);
 
-  d3.selectAll(".line-unselected")
-  .transition()
-  .duration(50)
-  .style("stroke", "',
-      colors[2],
-      '")
-  .attr("stroke-width",',
-      lineSize[2],
-      ')
-}
+    // Graph dot lines
+    for (let i = 0; i < data.length; i++) {
+      svg.append("line")
+        .attr("class", "line")
+        .attr("x1", xlMap(data[i]))
+        .attr("y1", yMap(data[i]))
+        .attr("x2", xuMap(data[i]))
+        .attr("y2", yMap(data[i]))
+        .attr("stroke", colors[2])
+        .attr("stroke-width", lineSize[1])
+    }
 
+    // Graph points
+    svg.selectAll(".dot")
+      .data(data)
+      .enter()
+      .append("circle")
+        .attr("class", "dot")
+        .attr("r", pointSize[1])
+        .attr("cx", xMap)
+        .attr("cy", yMap)
+      .on("mouseover", highlight)
+      .on("mouseleave", doNotHighlight )
 
-
-
-// Highlight the specie that is hovered
-var doNotHighlight = function(){
-  d3.selectAll(".dot")
-  .transition()
-  .duration(200)
-  .style("fill", "', colors[3], '")
-  .attr("r",', ptSize[2], ')
-
-  d3.selectAll(".line")
-  .transition()
-  .duration(200)
-  .style("stroke", "', colors[3], '")
-  .attr("stroke-width",', lineSize[2], ')
-
-}
-
-svg.append("g")
-.attr("transform", "translate(0," + height*1.025 + ")")
-.call(d3.axisBottom(x).tickSizeOuter(0));
-
-svg
-.append("g")
-.attr("transform", `translate(${-width*.035},0)`)
-.call(d3.axisLeft(y));
-
-svg.append("text")
-.attr("y", 0 - margin.bottom)
-.attr("y2",0 - width/2)
-.attr("dy", "1em")
-.style("text-anchor", "middle")
-.style("font-size","', labfont, 'px")
-.text("', ylab, '")
-.style("font-family", "', labfam, '");
-
-var m;
-for(m=0; m<data.length; m++){
-  svg
-  .append("line")
-  .attr("class", "line")
-  .attr("x1", xlMap(data[m]))
-  .attr("y1", yMap(data[m]))
-  .attr("x2", xuMap(data[m]))
-  .attr("y2", yMap(data[m]))
-  .attr("stroke", "', colors[3], '")
-  .attr("stroke-width",', lineSize[2], ')
-}
-
-svg
-.selectAll(".dot")
-.data(data)
-.enter()
-.append("circle")
-.attr("class", "dot")
-.attr("r",', ptSize[2], ')
-.attr("cx", xMap)
-.attr("cy", yMap)
-.on("mouseover", highlight)
-.on("mouseleave", doNotHighlight )
-
-d3.selectAll(".tick").style("font-size", "', axfont, 'px")
-
-</script>
+  </script>
 </body>
-')
+</html>'
+)
 
-    cat(h,
-        "\n",
-        sep  =  "",
-        file  =  fname,
-        append  =  FALSE)
-
-    cat(
-      "var data = ",
-      toJSON(g),
-      ";\n",
-      sep  =  "",
-      file  =  fname,
-      append  =  TRUE
-    )
-
-    cat(b,
-        sep  =  "",
-        file  =  fname,
-        append  =  TRUE)
+    cat(h, "\n", sep  =  "", file  =  fname, append  =  FALSE)
+    cat("var data = ", toJSON(g), ";\n", sep  =  "", file  =  fname, append  =  TRUE)
+    cat(b, sep  =  "", file  =  fname, append  =  TRUE)
 
     if (return_iFrame) {
-      tags$iframe(
-        src  =  fname,
-        height  =  height  *  1.05,
-        width  =  width  *  1.05,
-        style  =  "border: none"
-      )
+      tags$iframe(src  =  fname, height  =  height  *  1.05, width  =  width  *  1.05, style  =  "border: none")
     }
-  }
 
+    r2d3(data=g, options = list(axfont = axfont, colors = colors, labfont = labfont, xlab = ylab, labfam = labfam, script = "sigd3h.js", height = height, width = width)
+  }
 
 #' Corporatism
 #'
