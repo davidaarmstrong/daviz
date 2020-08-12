@@ -1,171 +1,148 @@
+<!doctype html>
 
-    <meta charset="utf-8">
-    <head>
-    </head>
-    <body>
-    <script src="https://d3js.org/d3-selection.v1.min.js"></script>
-    <script src="https://d3js.org/d3.v4.js"></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<html lang="en"></html>
+<head>
+  <meta charset="utf-8">
 
-    <script>
-var data = [{"y":"USA","x":0.0565,"xlow":0.0363,"xup":0.074,"obs":16,"g1":1,"g2":1,"g3":1,"g4":1,"g5":1,"g6":1,"g7":1,"g8":1,"g9":1,"g10":1,"g11":1,"g12":1,"g13":1,"g14":1,"g15":1,"g16":0,"_row":"USA"},{"y":"JAP","x":0.0241,"xlow":0.0081,"xup":0.0407,"obs":11,"g1":0,"g2":1,"g3":1,"g4":0,"g5":1,"g6":0,"g7":0,"g8":0,"g9":1,"g10":0,"g11":0,"g12":1,"g13":1,"g14":1,"g15":0,"g16":1,"_row":"JAP"},{"y":"ITA","x":0.0224,"xlow":0.0108,"xup":0.0333,"obs":10,"g1":0,"g2":1,"g3":1,"g4":0,"g5":1,"g6":0,"g7":0,"g8":0,"g9":1,"g10":0,"g11":0,"g12":1,"g13":1,"g14":1,"g15":0,"g16":1,"_row":"ITA"},{"y":"GER","x":0.0202,"xlow":0.0128,"xup":0.0272,"obs":8,"g1":0,"g2":1,"g3":1,"g4":0,"g5":1,"g6":0,"g7":0,"g8":0,"g9":1,"g10":0,"g11":0,"g12":1,"g13":1,"g14":1,"g15":0,"g16":1,"_row":"GER"},{"y":"CAN","x":0.0191,"xlow":0.0086,"xup":0.0292,"obs":4,"g1":0,"g2":1,"g3":1,"g4":0,"g5":1,"g6":0,"g7":0,"g8":0,"g9":1,"g10":0,"g11":0,"g12":1,"g13":1,"g14":1,"g15":0,"g16":1,"_row":"CAN"},{"y":"UK","x":0.0169,"xlow":0.0048,"xup":0.0288,"obs":15,"g1":0,"g2":0,"g3":1,"g4":0,"g5":0,"g6":0,"g7":0,"g8":0,"g9":0,"g10":0,"g11":0,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"UK"},{"y":"AUL","x":0.0153,"xlow":0.0016,"xup":0.0287,"obs":1,"g1":0,"g2":0,"g3":0,"g4":0,"g5":0,"g6":0,"g7":0,"g8":0,"g9":0,"g10":0,"g11":0,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"AUL"},{"y":"FRA","x":0.0119,"xlow":0.0022,"xup":0.0227,"obs":7,"g1":0,"g2":0,"g3":0,"g4":0,"g5":0,"g6":0,"g7":0,"g8":0,"g9":0,"g10":0,"g11":0,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"FRA"},{"y":"NOR","x":0.0087,"xlow":0.0022,"xup":0.0153,"obs":13,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"NOR"},{"y":"NET","x":0.0077,"xlow":0.0037,"xup":0.0116,"obs":12,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"NET"},{"y":"FIN","x":0.0074,"xlow":-0.0076,"xup":0.0224,"obs":6,"g1":0,"g2":0,"g3":0,"g4":0,"g5":0,"g6":0,"g7":0,"g8":0,"g9":0,"g10":0,"g11":0,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"FIN"},{"y":"DEN","x":0.0065,"xlow":-0.0045,"xup":0.0176,"obs":5,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"DEN"},{"y":"AUS","x":0.0059,"xlow":-0.0037,"xup":0.0158,"obs":2,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"AUS"},{"y":"IRE","x":0.0058,"xlow":-0.0011,"xup":0.013,"obs":9,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"IRE"},{"y":"SWE","x":0.0058,"xlow":-0.0059,"xup":0.0172,"obs":14,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"SWE"},{"y":"BEL","x":0.005,"xlow":0.0002,"xup":0.0099,"obs":3,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":1,"g16":1,"_row":"BEL"}];
-
+  <title>Alvarez Dataset - sigd3h.default plot</title>
+  <script src="https://d3js.org/d3-selection.v1.min.js"></script>
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+</head>
+<body>
+  <script>
+    let data = [{"y":"USA","x":0.0565,"xlow":0.0363,"xup":0.074,"obs":16,"g1":1,"g2":1,"g3":1,"g4":1,"g5":1,"g6":1,"g7":1,"g8":1,"g9":1,"g10":1,"g11":1,"g12":1,"g13":1,"g14":1,"g15":1,"g16":0,"_row":"USA"},{"y":"JAP","x":0.0241,"xlow":0.0081,"xup":0.0407,"obs":11,"g1":0,"g2":1,"g3":1,"g4":0,"g5":1,"g6":0,"g7":0,"g8":0,"g9":1,"g10":0,"g11":0,"g12":1,"g13":1,"g14":1,"g15":0,"g16":1,"_row":"JAP"},{"y":"ITA","x":0.0224,"xlow":0.0108,"xup":0.0333,"obs":10,"g1":0,"g2":1,"g3":1,"g4":0,"g5":1,"g6":0,"g7":0,"g8":0,"g9":1,"g10":0,"g11":0,"g12":1,"g13":1,"g14":1,"g15":0,"g16":1,"_row":"ITA"},{"y":"GER","x":0.0202,"xlow":0.0128,"xup":0.0272,"obs":8,"g1":0,"g2":1,"g3":1,"g4":0,"g5":1,"g6":0,"g7":0,"g8":0,"g9":1,"g10":0,"g11":0,"g12":1,"g13":1,"g14":1,"g15":0,"g16":1,"_row":"GER"},{"y":"CAN","x":0.0191,"xlow":0.0086,"xup":0.0292,"obs":4,"g1":0,"g2":1,"g3":1,"g4":0,"g5":1,"g6":0,"g7":0,"g8":0,"g9":1,"g10":0,"g11":0,"g12":1,"g13":1,"g14":1,"g15":0,"g16":1,"_row":"CAN"},{"y":"UK","x":0.0169,"xlow":0.0048,"xup":0.0288,"obs":15,"g1":0,"g2":0,"g3":1,"g4":0,"g5":0,"g6":0,"g7":0,"g8":0,"g9":0,"g10":0,"g11":0,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"UK"},{"y":"AUL","x":0.0153,"xlow":0.0016,"xup":0.0287,"obs":1,"g1":0,"g2":0,"g3":0,"g4":0,"g5":0,"g6":0,"g7":0,"g8":0,"g9":0,"g10":0,"g11":0,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"AUL"},{"y":"FRA","x":0.0119,"xlow":0.0022,"xup":0.0227,"obs":7,"g1":0,"g2":0,"g3":0,"g4":0,"g5":0,"g6":0,"g7":0,"g8":0,"g9":0,"g10":0,"g11":0,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"FRA"},{"y":"NOR","x":0.0087,"xlow":0.0022,"xup":0.0153,"obs":13,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"NOR"},{"y":"NET","x":0.0077,"xlow":0.0037,"xup":0.0116,"obs":12,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"NET"},{"y":"FIN","x":0.0074,"xlow":-0.0076,"xup":0.0224,"obs":6,"g1":0,"g2":0,"g3":0,"g4":0,"g5":0,"g6":0,"g7":0,"g8":0,"g9":0,"g10":0,"g11":0,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"FIN"},{"y":"DEN","x":0.0065,"xlow":-0.0045,"xup":0.0176,"obs":5,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"DEN"},{"y":"AUS","x":0.0059,"xlow":-0.0037,"xup":0.0158,"obs":2,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"AUS"},{"y":"IRE","x":0.0058,"xlow":-0.0011,"xup":0.013,"obs":9,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"IRE"},{"y":"SWE","x":0.0058,"xlow":-0.0059,"xup":0.0172,"obs":14,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":0,"g16":1,"_row":"SWE"},{"y":"BEL","x":0.005,"xlow":0.0002,"xup":0.0099,"obs":3,"g1":0,"g2":0,"g3":0,"g4":1,"g5":0,"g6":0,"g7":0,"g8":1,"g9":0,"g10":1,"g11":1,"g12":0,"g13":0,"g14":0,"g15":1,"g16":1,"_row":"BEL"}];
   </script>
 
   <script>
-    var  h=600;
-    var w =500;
-    var margin = {top: h*.02, left: w*0.15, bottom: h*0.15, right: w*.05},
-      width = w - margin.left - margin.right,
-      height = h - margin.top - margin.bottom;
+    // Variables
+    let height = 600, width = 500;
+      margin = {top: height * 0.02, left: width * 0.15, bottom: height * 0.2, right: width * 0.05},
+      adjustedWidth = width - margin.left - margin.right,
+      adjustedHeight = height - margin.top - margin.bottom,
+      colors = ["#B80000", "black", "black"],
+      pointSize = [7, 5], lineSize = [2, 1],
+      labelFontFamily = "sans-serif", xLabel = "Effect of Sector",
+      labelFont = 14, axesFont = 12;
 
-    var rgY = [0];
-    var deltaY = height/(data.length-1);
-    var j;
-    for(j =1; j<data.length; j++){
-      rgY.push(j*deltaY);
+    // Append svg to the body
+    let svg = d3.select("body")
+      .append("svg")
+        .attr("width", adjustedWidth + margin.left + margin.right)
+        .attr("height", adjustedHeight + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Mapping functions
+    const xMap = (el) => x(el.x);
+    const xlMap = (el) => x(el.xlow);
+    const xuMap = (el) => x(el.xup);
+    const yMap = (el) => y(el.y);
+
+    // Axes initialization
+    let rgY = [0];
+    const deltaY = adjustedHeight/(data.length-1);
+    for(let i = 1; i < data.length; i++) {
+      rgY.push(i * deltaY);
     }
 
-// append the svg object to the body of the page
-var svg = d3.select("body")
-  .append("svg")
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-  .attr("transform",
-        "translate(" + margin.left + "," + margin.top + ")");
+    let y = d3.scaleOrdinal()
+      .domain(Array.from(data, el => el.y))
+      .range(rgY);
 
+    let x = d3.scaleLinear()
+      .domain([d3.min(data, (el) => el.xlow), d3.max(data, (el) => el.xup)])
+      .range([0, adjustedWidth]);
 
-  var xValue = function(d){return d.x};
-  var yValue = function(d){return d.y};
-  var xlValue = function(d){return d.xlow};
-  var xuValue = function(d){return d.xup};
+    svg.append("g")
+      .attr("transform", "translate(0," + adjustedHeight * 1.025 + ")")
+      .call(d3.axisBottom(x).tickSizeOuter(0));
 
+    svg.append("g")
+      .attr("transform", `translate(${-adjustedWidth * 0.035},0)`)
+      .call(d3.axisLeft(y));
 
-  var yDom =[];
-  data.forEach(d => yDom.push(d.y));
+    d3.selectAll(".tick").style("font-size", `${axesFont}px`)
 
-  var y = d3.scaleOrdinal()
-  .domain(yDom)
-  .range(rgY);
+    // Mouseover highlight function
+    const highlight = (d) => {
+      for (let i = 0; i < data.length; i++){
+        if (data[i][`g${d.obs}`] === 1){
+          d3.selectAll(`circle[cy="${yMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("fill", colors[0])
+           .attr("r", pointSize[0])
 
-  var x = d3.scaleLinear()
-  .domain([d3.min(data, xlValue), d3.max(data, xuValue)])
-  .range([0, width]);
+          d3.selectAll(`line[y1="${yMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("stroke", colors[0])
+           .attr("stroke-width", lineSize[0])
+        } else {
+          d3.selectAll(`circle[cy="${yMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("fill", colors[1])
+           .attr("r", pointSize[1])
 
-
-  var xMap = function(d){return x(xValue(d))}
-  var xlMap = function(d){return x(xlValue(d))}
-  var xuMap = function(d){return x(xuValue(d))}
-  var yMap = function(d){return y(yValue(d))}
-
-
-var highlight = function(d){
-  var sel = d.obs;
-  var gvar = `g${sel}`;
-  var i;
-  for(i = 0; i < data.length; i++){
-    if(data[i][gvar] === 1){
-      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.add("dot-selected");
-      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.remove("dot-unselected");
-      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.add("line-selected");
-      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.remove("line-unselected");
-    }else{
-      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.remove("dot-selected");
-      document.querySelector(`circle[cy="${yMap(data[i])}"]`).classList.add("dot-unselected");
-      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.remove("line-selected");
-      document.querySelector(`line[y1="${yMap(data[i])}"]`).classList.add("line-unselected");
+          d3.selectAll(`line[y1="${yMap(data[i])}"]`)
+           .transition()
+           .duration(50)
+           .style("stroke", colors[1])
+           .attr("stroke-width", lineSize[1])
+        }
+      }
     }
-  }
 
-  d3.selectAll(".dot-selected")
-  .transition()
-  .duration(50)
-  .style("fill", "#B80000")
-  .attr("r",7)
+    // Mouseleave highlight function
+    const doNotHighlight = () => {
+      d3.selectAll(".dot")
+       .transition()
+       .duration(200)
+       .style("fill", colors[2])
+       .attr("r", pointSize[1])
 
-  d3.selectAll(".line-selected")
-  .transition()
-  .duration(50)
-  .style("stroke", "#B80000")
-  .attr("stroke-width",3)
+      d3.selectAll(".line")
+       .transition()
+       .duration(200)
+       .style("stroke", colors[2])
+       .attr("stroke-width", lineSize[1])
+    }
 
-  d3.selectAll(".dot-unselected")
-  .transition()
-  .duration(50)
-  .style("fill", "#000000")
-  .attr("r",5)
+    // Horizontal label
+    svg.append("text")
+      .attr("y", adjustedHeight + margin.bottom*0.4)
+      .attr("x", adjustedWidth / 2)
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .style("font-size", `${labelFont}px`)
+      .text(xLabel)
+      .style("font-family", labelFontFamily);
 
-  d3.selectAll(".line-unselected")
-  .transition()
-  .duration(50)
-  .style("stroke", "#000000")
-  .attr("stroke-width",1.5)
-}
+    // Graph dot lines
+    for (let i = 0; i < data.length; i++) {
+      svg.append("line")
+        .attr("class", "line")
+        .attr("x1", xlMap(data[i]))
+        .attr("y1", yMap(data[i]))
+        .attr("x2", xuMap(data[i]))
+        .attr("y2", yMap(data[i]))
+        .attr("stroke", colors[2])
+        .attr("stroke-width", lineSize[1])
+    }
 
-
-
-
-// Highlight the specie that is hovered
-var doNotHighlight = function(){
-  d3.selectAll(".dot")
-  .transition()
-  .duration(200)
-  .style("fill", "#000000")
-  .attr("r",5)
-
-  d3.selectAll(".line")
-  .transition()
-  .duration(200)
-  .style("stroke", "#000000")
-  .attr("stroke-width",1.5)
-
-}
-
-svg.append("g")
-.attr("transform", "translate(0," + height*1.025 + ")")
-.call(d3.axisBottom(x).tickSizeOuter(0));
-
-svg
-.append("g")
-.attr("transform", `translate(${-width*.035},0)`)
-.call(d3.axisLeft(y));
-
-svg.append("text")
-.attr("y", 0 - margin.bottom)
-.attr("y2",0 - width/2)
-.attr("dy", "1em")
-.style("text-anchor", "middle")
-.style("font-size","12px")
-.text("Random Coefficients for Demand")
-.style("font-family", "sans-serif");
-
-var m;
-for(m=0; m<data.length; m++){
-  svg
-  .append("line")
-  .attr("class", "line")
-  .attr("x1", xlMap(data[m]))
-  .attr("y1", yMap(data[m]))
-  .attr("x2", xuMap(data[m]))
-  .attr("y2", yMap(data[m]))
-  .attr("stroke", "#000000")
-  .attr("stroke-width",1.5)
-}
-
-svg
-.selectAll(".dot")
-.data(data)
-.enter()
-.append("circle")
-.attr("class", "dot")
-.attr("r",5)
-.attr("cx", xMap)
-.attr("cy", yMap)
-.on("mouseover", highlight)
-.on("mouseleave", doNotHighlight )
-
-d3.selectAll(".tick").style("font-size", "12px")
-
-</script>
+    // Graph points
+    svg.selectAll(".dot")
+      .data(data)
+      .enter()
+      .append("circle")
+        .attr("class", "dot")
+        .attr("r", pointSize[1])
+        .attr("cx", xMap)
+        .attr("cy", yMap)
+      .on("mouseover", highlight)
+      .on("mouseleave", doNotHighlight )
+  </script>
 </body>
+</html>
